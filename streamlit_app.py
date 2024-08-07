@@ -1,40 +1,34 @@
 import streamlit as st
 import pandas as pd
+from streamlit_autocomplete import st_autocomplete
 
-# Excelファイルのパス（適宜変更してください）
-EXCEL_FILE_PATH = 'pokemon_data.xlsx'
+# Excelファイルのパス
+EXCEL_FILE_PATH = 'ポケモン.xlsx'
 
 def load_data():
-    # Excelファイルを読み込み
-    df = pd.read_excel(EXCEL_FILE_PATH)
+    # Excelファイルの「種族値」シートを読み込み
+    df = pd.read_excel(EXCEL_FILE_PATH, sheet_name='種族値')
     return df
 
-def main():
-    st.title("ポケモンステータス表示")
+# データの読み込み
+data = load_data()
 
-    # データの読み込み
-    data = load_data()
+# ポケモンの名前リストを取得
+pokemon_names = data['ポケモン'].tolist()
 
-    # ポケモンの名前をユーザーに入力してもらう
-    pokemon_name = st.text_input("ポケモンの名前を入力してください")
+st.title("ポケモンステータス表示")
 
-    if pokemon_name:
-        # 入力された名前でフィルタリング
-        filtered_data = data[data['ポケモン'] == pokemon_name]
+# オートコンプリート機能付きのセレクトボックス
+selected_pokemon = st_autocomplete("ポケモンの名前を入力してください", pokemon_names)
 
-        if not filtered_data.empty:
-            # ステータス情報を表示
-            pokemon_info = filtered_data.iloc[0]
-            st.write(f"ポケモン名: {pokemon_info['ポケモン']}")
-            st.write(f"H: {pokemon_info['H']}")
-            st.write(f"A: {pokemon_info['A']}")
-            st.write(f"B: {pokemon_info['B']}")
-            st.write(f"C: {pokemon_info['C']}")
-            st.write(f"D: {pokemon_info['D']}")
-            st.write(f"S: {pokemon_info['S']}")
-            st.write(f"合計: {pokemon_info['合計']}")
-        else:
-            st.write("該当するポケモンが見つかりませんでした。")
+if selected_pokemon:
+    # 選択されたポケモンでフィルタリング
+    filtered_data = data[data['ポケモン'] == selected_pokemon]
 
-if __name__ == "__main__":
-    main()
+    if not filtered_data.empty:
+        # ステータス情報を表示（横並びにするためのCSSスタイルを適用）
+        pokemon_info = filtered_data.iloc[0]
+        st.write(f"ポケモン名: {pokemon_info['ポケモン']}")
+        st.write(f"H: {pokemon_info['H']} | A: {pokemon_info['A']} | B: {pokemon_info['B']} | C: {pokemon_info['C']} | D: {pokemon_info['D']} | S: {pokemon_info['S']} | 合計: {pokemon_info['合計']}")
+    else:
+        st.write("該当するポケモンが見つかりませんでした。")
