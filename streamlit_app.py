@@ -33,7 +33,7 @@ coordinates_jp = {
     '大分南公民館': [33.2019768, 131.6120776],
     '森岡区公民館': [33.21092558, 131.6196924],
     '鶴崎小学校': [33.24074436, 131.6302151],
-    '舞鶴小学校': [33.24698885, 131.6263689],
+    '舞鶴小学校3M': [33.24698885, 131.6263689],
     '東大分小学校': [33.24399346, 131.6400992],
     '城東中学校': [33.23878584, 131.6447921],
     '日岡小学校': [33.24978017, 131.6589679],
@@ -146,7 +146,7 @@ coordinates_en = {
     'Oita South Community Center': [33.2019768, 131.6120776],
     'Morioka Community Center': [33.21092558, 131.6196924],
     'Tsurusaki Elementary School': [33.24074436, 131.6302151],
-    'Maizuru Elementary School': [33.24698885, 131.6263689],
+    'Maizuru Elementary School3M': [33.24698885, 131.6263689],
     'Higashi Oita Elementary School': [33.24399346, 131.6400992],
     'Joto Junior High School': [33.23878584, 131.6447921],
     'Hiyokoshi Elementary School': [33.24978017, 131.6589679],
@@ -245,14 +245,14 @@ def create_map_with_markers(coords, icon_url=None):
     return m
 
 def main():
-    st.title("ハザードマップ")
+    st.title("Map of Locations")
 
     # Create maps for both Japanese and English locations
     map_jp = create_map_with_markers(coordinates_jp)
     map_en = create_map_with_markers(coordinates_en)
 
     # Display maps in Streamlit
-    st.subheader("日本語")
+    st.subheader("Japanese Locations")
     st_folium(map_jp, width=800, height=600)
 
     st.subheader("English Locations")
