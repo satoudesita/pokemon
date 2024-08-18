@@ -1,0 +1,111 @@
+import streamlit as st
+import pandas as pd
+
+# Excelファイルのパス
+EXCEL_FILE_PATH = 'ポケモン.xlsx'
+
+def load_data():
+    # Excelファイルの「種族値」シートを読み込み
+    df = pd.read_excel(EXCEL_FILE_PATH, sheet_name='種族値')
+    return df
+
+# データの読み込み
+data = load_data()
+
+# ポケモンの名前リストを取得
+pokemon_names = data['ポケモン'].tolist()
+
+# サイドバーでポケモンを選択
+st.sidebar.title("ポケモン選択")
+selected_pokemons = st.sidebar.multiselect("ポケモンの名前を選んでください", pokemon_names)
+
+# セッション状態に努力値と個体値を保存するための初期化
+if 'evs' not in st.session_state:
+    st.session_state.evs = {pokemon: {'hp': 0, 'attack': 0, 'defense': 0, 'special_attack': 0, 'special_defense': 0, 'speed': 0} for pokemon in pokemon_names}
+
+if 'ivs' not in st.session_state:
+    st.session_state.ivs = {pokemon: {'hp': 1, 'attack': 1, 'defense': 1, 'special_attack': 1, 'special_defense': 1, 'speed': 1} for pokemon in pokemon_names}
+
+# メインエリアにタイトルを表示
+st.title("ポケモンステータス表示")
+
+if selected_pokemons:
+    # サイドバーで選択されたポケモンからセレクトボックスを作成
+    selected_pokemon = st.selectbox("表示するポケモンを選んでください", selected_pokemons)
+
+    # セッション状態にポケモンの努力値と個体値が存在しない場合は初期化
+    if selected_pokemon not in st.session_state.evs:
+        st.session_state.evs[selected_pokemon] = {'hp': 0, 'attack': 0, 'defense': 0, 'special_attack': 0, 'special_defense': 0, 'speed': 0}
+
+    if selected_pokemon not in st.session_state.ivs:
+        st.session_state.ivs[selected_pokemon] = {'hp': 1, 'attack': 1, 'defense': 1, 'special_attack': 1, 'special_defense': 1, 'speed': 1}
+
+    # 選択されたポケモンでフィルタリング
+    filtered_data = data[data['ポケモン'] == selected_pokemon]
+
+    if not filtered_data.empty:
+        # ステータス情報を表示
+        pokemon_info = filtered_data.iloc[0]
+        st.write(f"ポケモン名: {pokemon_info['ポケモン']}")
+        st.write(f"H: {pokemon_info['H']} | A: {pokemon_info['A']} | B: {pokemon_info['B']} | C: {pokemon_info['C']} | D: {pokemon_info['D']} | S: {pokemon_info['S']} | 合計: {pokemon_info['合計']}")
+        
+        st.write("努力値を入力してください")
+
+        # 3列のレイアウトを作成
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            ev_hp = st.number_input(f"H努力値", min_value=0, max_value=252, step=1, value=st.session_state.evs[selected_pokemon]['hp'], key=f"{selected_pokemon}_ev_hp")
+            ev_attack = st.number_input(f"A努力値", min_value=0, max_value=252, step=1, value=st.session_state.evs[selected_pokemon]['attack'], key=f"{selected_pokemon}_ev_attack")
+            ev_defense = st.number_input(f"B努力値", min_value=0, max_value=252, step=1, value=st.session_state.evs[selected_pokemon]['defense'], key=f"{selected_pokemon}_ev_defense")
+
+        with col2:
+            ev_special_attack = st.number_input(f"C努力値", min_value=0, max_value=252, step=1, value=st.session_state.evs[selected_pokemon]['special_attack'], key=f"{selected_pokemon}_ev_special_attack")
+            ev_special_defense = st.number_input(f"D努力値", min_value=0, max_value=252, step=1, value=st.session_state.evs[selected_pokemon]['special_defense'], key=f"{selected_pokemon}_ev_special_defense")
+            ev_speed = st.number_input(f"S努力値", min_value=0, max_value=252, step=1, value=st.session_state.evs[selected_pokemon]['speed'], key=f"{selected_pokemon}_ev_speed")
+
+        # 努力値の合計を計算し、セッション状態に保存
+        total_ev = ev_hp + ev_attack + ev_defense + ev_special_attack + ev_special_defense + ev_speed
+        st.write(f"努力値の合計: {total_ev}")
+        if total_ev > 252:
+            st.warning(f"{pokemon_info['ポケモン']} の努力値の合計が252を超えています。合計は252以下でなければなりません。")
+        
+        # 努力値をセッション状態に保存
+        st.session_state.evs[selected_pokemon] = {
+            'hp': ev_hp,
+            'attack': ev_attack,
+            'defense': ev_defense,
+            'special_attack': ev_special_attack,
+            'special_defense': ev_special_defense,
+            'speed': ev_speed
+        }
+
+        st.write("個体値を入力してください")
+
+        # 3列のレイアウトを作成
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            iv_hp = st.number_input(f"H個体値", min_value=1, max_value=31, step=1, value=st.session_state.ivs[selected_pokemon]['hp'], key=f"{selected_pokemon}_iv_hp")
+            iv_attack = st.number_input(f"A個体値", min_value=1, max_value=31, step=1, value=st.session_state.ivs[selected_pokemon]['attack'], key=f"{selected_pokemon}_iv_attack")
+            iv_defense = st.number_input(f"B個体値", min_value=1, max_value=31, step=1, value=st.session_state.ivs[selected_pokemon]['defense'], key=f"{selected_pokemon}_iv_defense")
+
+        with col2:
+            iv_special_attack = st.number_input(f"C個体値", min_value=1, max_value=31, step=1, value=st.session_state.ivs[selected_pokemon]['special_attack'], key=f"{selected_pokemon}_iv_special_attack")
+            iv_special_defense = st.number_input(f"D個体値", min_value=1, max_value=31, step=1, value=st.session_state.ivs[selected_pokemon]['special_defense'], key=f"{selected_pokemon}_iv_special_defense")
+            iv_speed = st.number_input(f"S個体値", min_value=1, max_value=31, step=1, value=st.session_state.ivs[selected_pokemon]['speed'], key=f"{selected_pokemon}_iv_speed")
+
+        # 個体値をセッション状態に保存
+        st.session_state.ivs[selected_pokemon] = {
+            'hp': iv_hp,
+            'attack': iv_attack,
+            'defense': iv_defense,
+            'special_attack': iv_special_attack,
+            'special_defense': iv_special_defense,
+            'speed': iv_speed
+        }
+
+    else:
+        st.write("該当するポケモンの情報が見つかりませんでした。")
+else:
+    st.write("サイドバーでポケモンを選択してください。")
