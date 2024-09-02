@@ -1,262 +1,240 @@
 import streamlit as st
-import folium
-from streamlit_folium import st_folium
-from folium.features import CustomIcon
+import numpy as np
+import random
+from PIL import Image
 
-# 地点の座標データ
-coordinates_jp = {
-    '（旧）長町小学校体育館': [33.24037861, 131.6079404],
-    '長浜小学校': [33.23664069, 131.6185963],
-    '中島（旧）小学校': [33.24356839, 131.6078256],
-    '浜町保育園': [33.2482074, 131.6055533],
-    'セキタアカデミー': [33.24806427, 131.6121589],
-    '春日町小学校': [33.24021145, 131.5967793],
-    '小路中学校': [33.23606079, 131.5948717],
-    'いきし保育園': [33.24314415, 131.5881486],
-    '大分西公民館': [33.23722617, 131.5899006],
-    '大道小学校': [33.23319584, 131.5999991],
-    '西野台小学校': [33.22835292, 131.5847721],
-    '大分西中学校': [33.23553035, 131.578583],
-    '大分西高校': [33.23350211, 131.590702],
-    '八幡小学校': [33.2425689, 131.5757366],
-    '神崎小学校': [33.25441022, 131.5451054],
-    '豊府小学校': [33.21686488, 131.6039789],
-    '南大分小学校': [33.21469204, 131.5939104],
-    '南大分公民館': [33.20744067, 131.5927611],
-    '南大分体育館': [33.20890194, 131.6007318],
-    '城南小学校': [33.2157236, 131.5867062],
-    '城南中学校': [33.21308599, 131.5795154],
-    '滝尾小学校': [33.21398088, 131.6327399],
-    '滝尾区公民館': [33.21669204, 131.628797],
-    '下郡小学校': [33.22890433, 131.6338983],
-    '森岡小学校': [33.20532322, 131.6146626],
-    '大分南公民館': [33.2019768, 131.6120776],
-    '森岡区公民館': [33.21092558, 131.6196924],
-    '鶴崎小学校': [33.24074436, 131.6302151],
-    '舞鶴小学校3M': [33.24698885, 131.6263689],
-    '東大分小学校': [33.24399346, 131.6400992],
-    '城東中学校': [33.23878584, 131.6447921],
-    '日岡小学校': [33.24978017, 131.6589679],
-    '大分東公民館': [33.2455097, 131.6505714],
-    '桃園小学校': [33.24200344, 131.6691495],
-    '原川中学校': [33.24726478, 131.6641502],
-    '明野東小学校': [33.21848152, 131.6574914],
-    '明野西小学校': [33.22204236, 131.6464665],
-    '明野北小学校': [33.23044492, 131.6556238],
-    '明野中学校': [33.21830742, 131.6509635],
-    '明治明野公民館': [33.22865877, 131.6583656],
-    '鶴崎小学校': [33.23933433, 131.6916493],
-    '鶴崎公民館': [33.24119765, 131.695636],
-    '河内公民館': [33.24733238, 131.6966441],
-    '美佐小学校': [33.25291125, 131.6802987],
-    '別府小学校': [33.2274459, 131.6855449],
-    '鶴崎中学校': [33.23672349, 131.6867794],
-    '森町幼稚園': [33.22459097, 131.6769364],
-    '明治小学校': [33.21843548, 131.6656887],
-    '大東中学校': [33.20986185, 131.6751068],
-    '明治北小学校': [33.23357381, 131.6680276],
-    '高田小学校': [33.21103504, 131.6897201],
-    '松岡小学校': [33.18108192, 131.6676308],
-    '川添小学校': [33.20208238, 131.6976476],
-    '宮口高原公民館': [33.19010692, 131.6999193],
-    '横田公民館': [33.22228866, 131.7010222],
-    '亀戸小学校': [33.11242634, 131.6527758],
-    '大塔公民館': [33.11983655, 131.6554627],
-    '大南公民館': [33.15669347, 131.6589014],
-    '半田小学校': [33.1642711, 131.6367842],
-    '半田中学校': [33.16610377, 131.6337276],
-    '半田みらい公民館': [33.16044618, 131.6206954],
-    '大分南高校': [33.15906346, 131.6304008],
-    'ひばり岡公民館': [33.17176588, 131.6395095],
-    '竹中小学校': [33.13973137, 131.653443],
-    '竹中中学校': [33.13372474, 131.6502023],
-    '吉野小学校': [33.11396243, 131.6935025],
-    '吉野中学校': [33.11112787, 131.6938874],
-    '竹田小学校': [33.18358773, 131.5637222],
-    '竹田公民館': [33.18814868, 131.5775093],
-    '竹田西中学校': [33.19056602, 131.5598552],
-    '宗根小学校': [33.20561186, 131.5768305],
-    '下宗根公民館': [33.19903637, 131.5890433],
-    '横瀬小学校': [33.18590589, 131.5415844],
-    '横瀬西小学校': [33.19038454, 131.5320785],
-    '東竹田小学校': [33.18766598, 131.5965278],
-    '田尻小学校': [33.17827927, 131.5902274],
-    '佐俣小学校': [33.18413317, 131.6046658],
-    '竹田東中学校': [33.17998435, 131.6118697],
-    '式戸小学校': [33.19096056, 131.6224244],
-    '押野小学校': [33.18393241, 131.6187517],
-    '角中学校': [33.20655065, 131.559902],
-    '角公民館': [33.20420492, 131.5581584],
-    '大分西小学校': [33.24749118, 131.7081347],
-    '大分小学校': [33.24838231, 131.7195704],
-    '大分中学校': [33.23459407, 131.7218775],
-    '大分公民館': [33.24674975, 131.7236751],
-    '大分浜公民館': [33.24203353, 131.7322384],
-    '坂ノ市小学校': [33.23322335, 131.7570231],
-    '坂ノ市中学校': [33.22913583, 131.7511102],
-    '坂ノ市公民館': [33.22823483, 131.7472775],
-    '細谷公民館': [33.24148965, 131.7746333],
-    '甲斐沢小学校': [33.22386693, 131.7468124],
-    '和子保育園': [33.23503148, 131.7422151],
-    '丹生小学校': [33.21490637, 131.7229589],
-    '久斗公民館': [33.21439689, 131.7313862],
-    '円明寺公民館': [33.20000939, 131.7068566],
-    '小崎小学校': [33.23948676, 131.7987455],
-    '（旧）喜佐江小学校': [33.21739724, 131.7969027],
-    '（旧）大師木津小学校': [33.24556514, 131.835471],
-    '佐賀関中学校': [33.24936554, 131.8628253],
-    '佐賀関小学校': [33.24592516, 131.8742449],
-    '佐賀関公民館': [33.24907846, 131.8733169],
-    'JX金属関崎未来会館': [33.26558038, 131.8993886],
-    '（旧）一白屋小学校': [33.20081728, 131.8580458],
-    '野津原小学校': [33.16507082, 131.5300747],
-    '野津原公民館': [33.15901168, 131.5242347],
-    '野津原中学校': [33.15488776, 131.5231026],
-    '（旧）野津原中部小学校': [33.14634182, 131.5100459],
-    '上住公民館': [33.12290996, 131.4780726],
-    '今市健康増進センター': [33.10764447, 131.4504586]
-}
+# 定数設定
+CELL_SIZE = 20
+DEFAULT_MAZE_SIZE = 31  # デフォルトの迷路サイズ
+DISPLAY_SIZE = 800  # Streamlitでの表示サイズ
+MIN_OBSTACLE_COUNT = 2  # 最小障害物数
+MAX_OBSTACLE_COUNT = 12  # 最大障害物数
+NUM_YELLOW_CELLS = 3  # 黄色にするセルの数
 
-coordinates_en = {
-    'Former Nagamachi Elementary School Gym': [33.24037861, 131.6079404],
-    'Nagamachi Elementary School': [33.23664069, 131.6185963],
-    'Nakajima (Former) Elementary School': [33.24356839, 131.6078256],
-    'Hamamachi Nursery': [33.2482074, 131.6055533],
-    'Sekita Academy': [33.24806427, 131.6121589],
-    'Kasuga Town Elementary School': [33.24021145, 131.5967793],
-    'Koji Junior High School': [33.23606079, 131.5948717],
-    'Ikishi Nursery': [33.24314415, 131.5881486],
-    'Oita West Community Center': [33.23722617, 131.5899006],
-    'Odaido Elementary School': [33.23319584, 131.5999991],
-    'Nishinodai Elementary School': [33.22835292, 131.5847721],
-    'Oita West Junior High School': [33.23553035, 131.578583],
-    'Oita West High School': [33.23350211, 131.590702],
-    'Yahata Elementary School': [33.2425689, 131.5757366],
-    'Kanzaki Elementary School': [33.25441022, 131.5451054],
-    'Toyofu Elementary School': [33.21686488, 131.6039789],
-    'Minami Oita Elementary School': [33.21469204, 131.5939104],
-    'Minami Oita Community Center': [33.20744067, 131.5927611],
-    'Minami Oita Gym': [33.20890194, 131.6007318],
-    'Jonan Elementary School': [33.2157236, 131.5867062],
-    'Jonan Junior High School': [33.21308599, 131.5795154],
-    'Takioka Elementary School': [33.21398088, 131.6327399],
-    'Takioka Community Center': [33.21669204, 131.628797],
-    'Shimogori Elementary School': [33.22890433, 131.6338983],
-    'Morioka Elementary School': [33.20532322, 131.6146626],
-    'Oita South Community Center': [33.2019768, 131.6120776],
-    'Morioka Community Center': [33.21092558, 131.6196924],
-    'Tsurusaki Elementary School': [33.24074436, 131.6302151],
-    'Maizuru Elementary School3M': [33.24698885, 131.6263689],
-    'Higashi Oita Elementary School': [33.24399346, 131.6400992],
-    'Joto Junior High School': [33.23878584, 131.6447921],
-    'Hiyokoshi Elementary School': [33.24978017, 131.6589679],
-    'Oita East Community Center': [33.2455097, 131.6505714],
-    'Momozono Elementary School': [33.24200344, 131.6691495],
-    'Harukawa Junior High School': [33.24726478, 131.6641502],
-    'Akeno East Elementary School': [33.21848152, 131.6574914],
-    'Akeno West Elementary School': [33.22204236, 131.6464665],
-    'Akeno North Elementary School': [33.23044492, 131.6556238],
-    'Akeno Junior High School': [33.21830742, 131.6509635],
-    'Meiji Akeno Community Center': [33.22865877, 131.6583656],
-    'Tsurusaki Elementary School': [33.23933433, 131.6916493],
-    'Tsurusaki Community Center': [33.24119765, 131.695636],
-    'Kawauchi Community Center': [33.24733238, 131.6966441],
-    'Misako Elementary School': [33.25291125, 131.6802987],
-    'Beppu Elementary School': [33.2274459, 131.6855449],
-    'Tsurusaki Junior High School': [33.23672349, 131.6867794],
-    'Mori Town Nursery': [33.22459097, 131.6769364],
-    'Meiji Elementary School': [33.21843548, 131.6656887],
-    'Daito Junior High School': [33.20986185, 131.6751068],
-    'Meiji North Elementary School': [33.23357381, 131.6680276],
-    'Takada Elementary School': [33.21103504, 131.6897201],
-    'Matsuoka Elementary School': [33.18108192, 131.6676308],
-    'Kawazoe Elementary School': [33.20208238, 131.6976476],
-    'Miyaguchi Kogen Community Center': [33.19010692, 131.6999193],
-    'Yokota Community Center': [33.22228866, 131.7010222],
-    'Kameido Elementary School': [33.11242634, 131.6527758],
-    'Oto Park Community Center': [33.11983655, 131.6554627],
-    'Dai Nan Community Center': [33.15669347, 131.6589014],
-    'Handa Elementary School': [33.1642711, 131.6367842],
-    'Handa Junior High School': [33.16610377, 131.6337276],
-    'Handa Mira Community Center': [33.16044618, 131.6206954],
-    'Oita South High School': [33.15906346, 131.6304008],
-    'Hibarioka Community Center': [33.17176588, 131.6395095],
-    'Takenaka Elementary School': [33.13973137, 131.653443],
-    'Takenaka Junior High School': [33.13372474, 131.6502023],
-    'Yoshino Elementary School': [33.11396243, 131.6935025],
-    'Yoshino Junior High School': [33.11112787, 131.6938874],
-    'Taketa Elementary School': [33.18358773, 131.5637222],
-    'Taketa Community Center': [33.18814868, 131.5775093],
-    'Taketa West Junior High School': [33.19056602, 131.5598552],
-    'Sone Elementary School': [33.20561186, 131.5768305],
-    'Shimonesawa Community Center': [33.19903637, 131.5890433],
-    'Yokose Elementary School': [33.18590589, 131.5415844],
-    'Yokose West Elementary School': [33.19038454, 131.5320785],
-    'Higashi Taketa Elementary School': [33.18766598, 131.5965278],
-    'Tajiri Elementary School': [33.17827927, 131.5902274],
-    'Samata Elementary School': [33.18413317, 131.6046658],
-    'Taketa East Junior High School': [33.17998435, 131.6118697],
-    'Shikido Elementary School': [33.19096056, 131.6224244],
-    'Oshi Elementary School': [33.18393241, 131.6187517],
-    'Kado Junior High School': [33.20655065, 131.559902],
-    'Kado Community Center': [33.20420492, 131.5581584],
-    'Oita West Elementary School': [33.24749118, 131.7081347],
-    'Oita Elementary School': [33.24838231, 131.7195704],
-    'Oita Junior High School': [33.23459407, 131.7218775],
-    'Oita Community Center': [33.24674975, 131.7236751],
-    'Oita Hama Community Center': [33.24203353, 131.7322384],
-    'Saka no Ichi Elementary School': [33.23322335, 131.7570231],
-    'Saka no Ichi Junior High School': [33.22913583, 131.7511102],
-    'Saka no Ichi Community Center': [33.22823483, 131.7472775],
-    'Hosoya Community Center': [33.24148965, 131.7746333],
-    'Kaiizawa Elementary School': [33.22386693, 131.7468124],
-    'Wako Nursery': [33.23503148, 131.7422151],
-    'Nyu Elementary School': [33.21490637, 131.7229589],
-    'Kuto Community Center': [33.21439689, 131.7313862],
-    'Enmyoji Community Center': [33.20000939, 131.7068566],
-    'Kozaki Elementary School': [33.23948676, 131.7987455],
-    'Former Kisae Elementary School': [33.21739724, 131.7969027],
-    'Former Daishi Kizu Elementary School': [33.24556514, 131.835471],
-    'Sagaoka Junior High School': [33.24936554, 131.8628253],
-    'Sagaoka Elementary School': [33.24592516, 131.8742449],
-    'Sagaoka Community Center': [33.24907846, 131.8733169],
-    'JX Metal Seki Future Hall': [33.26558038, 131.8993886],
-    'Former Ichihakuya Elementary School': [33.20081728, 131.8580458],
-    'Notsuhara Elementary School': [33.16507082, 131.5300747],
-    'Notsuhara Community Center': [33.15901168, 131.5242347],
-    'Notsuhara Junior High School': [33.15488776, 131.5231026],
-    'Former Notsuhara Chubu Elementary School': [33.14634182, 131.5100459],
-    'Kamizumi Community Center': [33.12290996, 131.4780726],
-    'Imaichi Health Promotion Center': [33.10764447, 131.4504586]
-}
+# 障害物の数を決定する関数
+def calculate_obstacle_count(size):
+    # サイズに応じて障害物の数を調整
+    return min(MAX_OBSTACLE_COUNT, max(MIN_OBSTACLE_COUNT, size // 10))
 
-def create_map_with_markers(coords, icon_url=None):
-    # Create a base map centered around the average location
-    center = [sum(lat for lat, lon in coords.values()) / len(coords), 
-              sum(lon for lat, lon in coords.values()) / len(coords)]
-    m = folium.Map(location=center, zoom_start=12)
+# 迷路生成
+def generate_maze(size):
+    maze = np.ones((size, size), dtype=int)
+    stack = []
+    visited = np.zeros((size, size), dtype=bool)
+    
+    def is_valid(x, y):
+        return 0 <= x < size and 0 <= y < size and not visited[x, y]
+    
+    def carve_path(start_x, start_y):
+        stack.append((start_x, start_y))
+        maze[start_x, start_y] = 0
+        visited[start_x, start_y] = True
+        
+        while stack:
+            x, y = stack[-1]
+            neighbors = [(x-2, y), (x+2, y), (x, y-2), (x, y+2)]
+            random.shuffle(neighbors)
+            
+            carved = False
+            for nx, ny in neighbors:
+                if is_valid(nx, ny):
+                    maze[(x + nx) // 2, (y + ny) // 2] = 0
+                    maze[nx, ny] = 0
+                    visited[nx, ny] = True
+                    stack.append((nx, ny))
+                    carved = True
+                    break
+            if not carved:
+                stack.pop()
+    
+    # スタート位置
+    start_x, start_y = 1, 1
+    carve_path(start_x, start_y)
+    
+    # ゴール位置
+    goal_x, goal_y = size - 2, size - 2
+    maze[goal_x, goal_y] = 0
+    
+    return maze, (start_x, start_y), (goal_x, goal_y)
 
-    for name, (lat, lon) in coords.items():
-        icon = None
-        if icon_url:
-            icon = CustomIcon(icon_url, icon_size=(24, 24))
-        folium.Marker([lat, lon], popup=name, icon=icon).add_to(m)
+# 障害物の生成
+def generate_obstacles(maze, num_obstacles):
+    size = maze.shape[0]
+    obstacles = []
+    
+    for _ in range(num_obstacles):
+        while True:
+            x = random.randint(1, size - 2)
+            y = random.randint(1, size - 2)
+            if maze[y, x] == 0 and (x, y) not in obstacles:
+                obstacles.append((x, y))
+                break
+    
+    return obstacles
 
-    return m
+# 障害物の移動
+def move_obstacles(obstacles, maze):
+    new_obstacles = []
+    size = maze.shape[0]
+    
+    for (x, y) in obstacles:
+        direction = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])
+        new_x = x + direction[0]
+        new_y = y + direction[1]
+        
+        if 0 <= new_x < size and 0 <= new_y < size and maze[new_y, new_x] == 0:
+            new_obstacles.append((new_x, new_y))
+        else:
+            new_obstacles.append((x, y))  # 移動できない場合は元の位置にとどまる
+    
+    return new_obstacles
 
+# 黄色にするセルの位置を決定する関数
+def get_random_yellow_positions(maze, num_positions):
+    size = maze.shape[0]
+    free_cells = [(x, y) for x in range(size) for y in range(size) if maze[y, x] == 0]
+    return random.sample(free_cells, min(num_positions, len(free_cells)))
+
+# 簡単な問題を生成する関数
+def generate_problem():
+    # 固定の問題と答え
+    problem = "1 + 1 = ?"
+    answer = 2
+    return problem, answer
+
+# 迷路の描画
+def draw_maze(maze, player_pos, goal_pos, obstacles, yellow_cells):
+    maze_image = np.ones((maze.shape[0], maze.shape[1], 3), dtype=np.uint8) * 255  # 背景は白
+    maze_image[maze == 1] = [0, 0, 0]  # 壁を黒で描画
+    maze_image[goal_pos[1], goal_pos[0]] = [255, 0, 0]  # ゴールを赤で描画
+    maze_image[player_pos[1], player_pos[0]] = [0, 255, 0]  # プレイヤーを緑で描画
+
+    # 2〜3個のセルを黄色に変更
+    for (x, y) in yellow_cells:
+        maze_image[y, x] = [255, 255, 0]  # 黄色で描画
+
+    for (x, y) in obstacles:
+        maze_image[y, x] = [0, 0, 255]  # 障害物を青で描画
+
+    # 画像サイズ調整
+    pil_image = Image.fromarray(maze_image)
+    pil_image = pil_image.resize((DISPLAY_SIZE, DISPLAY_SIZE), Image.NEAREST)
+    
+    return pil_image
+
+# Streamlitアプリ
 def main():
-    st.title("Map of Locations")
+    st.title("迷路ゲーム")
 
-    # Create maps for both Japanese and English locations
-    map_jp = create_map_with_markers(coordinates_jp)
-    map_en = create_map_with_markers(coordinates_en)
+    # スライダーで迷路サイズを選択
+    maze_size = st.slider("迷路のサイズ", min_value=11, max_value=101, step=2, value=DEFAULT_MAZE_SIZE)
 
-    # Display maps in Streamlit
-    st.subheader("Japanese Locations")
-    st_folium(map_jp, width=800, height=600)
+    # ステートを使って迷路の位置を保持
+    if 'player_pos' not in st.session_state or 'maze_size' not in st.session_state or st.session_state.maze_size != maze_size:
+        st.session_state.maze_size = maze_size
+        st.session_state.player_pos = [1, 1]
+        st.session_state.start_pos = (1, 1)
+        st.session_state.maze, st.session_state.start_pos, st.session_state.goal_pos = generate_maze(maze_size)
+        num_obstacles = calculate_obstacle_count(maze_size)
+        st.session_state.obstacles = generate_obstacles(st.session_state.maze, num_obstacles)
+        st.session_state.yellow_cells = get_random_yellow_positions(st.session_state.maze, NUM_YELLOW_CELLS)
+        st.session_state.previous_player_pos = list(st.session_state.player_pos)  # プレイヤーの位置を記録
+    
+    maze = st.session_state.maze
+    player_pos = st.session_state.player_pos
+    goal_pos = st.session_state.goal_pos
+    obstacles = st.session_state.obstacles
+    yellow_cells = st.session_state.yellow_cells
 
-    st.subheader("English Locations")
-    st_folium(map_en, width=800, height=600)
+    # 黄色のマスに到達したかどうかを確認
+    if tuple(player_pos) in yellow_cells:
+        # 問題を生成
+        problem, answer = generate_problem()
+        st.session_state.current_problem = problem
+        st.session_state.problem_answer = answer
+
+        # 問題を表示
+        user_answer = st.text_input("問題に答えてください:", "")
+        if user_answer.isdigit() and int(user_answer) == st.session_state.problem_answer:
+            st.write("正解です！")
+            st.session_state.yellow_cells.remove(tuple(player_pos))  # 問題が解けたらその黄色マスを消去
+            st.session_state.previous_player_pos = list(player_pos)  # 正解した場合もプレイヤー位置を更新
+        elif user_answer and int(user_answer) != st.session_state.problem_answer:
+            st.write("不正解です。もう一度試してください。")
+            st.session_state.player_pos = st.session_state.previous_player_pos  # 不正解の場合、元の位置に戻す
+        
+        # 正解するまでゲームを一時停止
+        if tuple(player_pos) in yellow_cells:
+            st.stop()
+    
+    # 障害物の移動
+    st.session_state.obstacles = move_obstacles(st.session_state.obstacles, maze)
+    obstacles = st.session_state.obstacles
+
+    # 再生成ボタン
+    if st.button("迷路を再生成"):
+        st.session_state.player_pos = [1, 1]
+        st.session_state.maze, st.session_state.start_pos, st.session_state.goal_pos = generate_maze(maze_size)
+        num_obstacles = calculate_obstacle_count(maze_size)
+        st.session_state.obstacles = generate_obstacles(st.session_state.maze, num_obstacles)
+        st.session_state.yellow_cells = get_random_yellow_positions(st.session_state.maze, NUM_YELLOW_CELLS)
+        st.session_state.previous_player_pos = list(st.session_state.player_pos)
+    
+    # 移動処理
+    def move_left():
+        if maze[player_pos[1], player_pos[0] - 1] == 0:
+            player_pos[0] -= 1
+        st.session_state.player_pos = player_pos
+
+    def move_right():
+        if maze[player_pos[1], player_pos[0] + 1] == 0:
+            player_pos[0] += 1
+        st.session_state.player_pos = player_pos
+
+    def move_up():
+        if maze[player_pos[1] - 1, player_pos[0]] == 0:
+            player_pos[1] -= 1
+        st.session_state.player_pos = player_pos
+
+    def move_down():
+        if maze[player_pos[1] + 1, player_pos[0]] == 0:
+            player_pos[1] += 1
+        st.session_state.player_pos = player_pos
+
+    # ボタンの表示
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("左"):
+            move_left()
+    with col2:
+        if st.button("上"):
+            move_up()
+    with col3:
+        if st.button("右"):
+            move_right()
+    
+    with col2:
+        if st.button("下"):
+            move_down()
+
+    # ゴールに到達したか確認
+    if player_pos == list(goal_pos):
+        st.write("ゴールに到達しました!")
+
+    # 障害物に触れたか確認
+    if tuple(player_pos) in obstacles:
+        st.write("ゲームオーバー！障害物に触れました。")
+        st.session_state.player_pos = [1, 1]
+        st.session_state.maze, st.session_state.start_pos, st.session_state.goal_pos = generate_maze(maze_size)
+        num_obstacles = calculate_obstacle_count(maze_size)
+        st.session_state.obstacles = generate_obstacles(st.session_state.maze, num_obstacles)
+        st.session_state.yellow_cells = get_random_yellow_positions(st.session_state.maze, NUM_YELLOW_CELLS)
+        st.session_state.previous_player_pos = list(st.session_state.player_pos)
+        return
+
+    # 迷路を描画
+    maze_image = draw_maze(maze, player_pos, goal_pos, obstacles, yellow_cells)
+    st.image(maze_image, use_column_width=True)
 
 if __name__ == "__main__":
     main()
