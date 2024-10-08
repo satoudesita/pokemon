@@ -98,6 +98,7 @@ def main():
         new_password = st.text_input("パスワードを入力してください", type='password')
 
         if st.button("サインアップ"):
+            # ユーザー名がすでに存在するか確認
             if check_user_exists(conn, new_user):
                 st.error("このユーザー名は既に使用されています。別のユーザー名を選んでください。")
             else:
