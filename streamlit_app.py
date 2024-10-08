@@ -26,6 +26,12 @@ def add_user(conn, username, password):
     c.execute('INSERT INTO userstable(username, password) VALUES (?, ?)', (username, password))
     conn.commit()
 
+# ユーザー名の存在を確認する関数
+def check_user_exists(conn, username):
+    c = conn.cursor()
+    c.execute('SELECT * FROM userstable WHERE username = ?', (username,))
+    return c.fetchone() is not None
+
 # ユーザーをログインさせる関数
 def login_user(conn, username, password):
     c = conn.cursor()
@@ -92,22 +98,15 @@ def main():
         new_password = st.text_input("パスワードを入力してください", type='password')
 
         if st.button("サインアップ"):
-            # ユーザー追加のリトライ処理
-            retries = 5
-            for i in range(retries):
+            if check_user_exists(conn, new_user):
+                st.error("このユーザー名は既に使用されています。別のユーザー名を選んでください。")
+            else:
                 try:
                     add_user(conn, new_user, make_hashes(new_password))
                     st.success("アカウントの作成に成功しました")
                     st.info("ログイン画面からログインしてください")
-                    break
-                except sqlite3.IntegrityError:
-                    st.error("このユーザー名は既に使用されています。別のユーザー名を選んでください。")
-                    break
-                except sqlite3.OperationalError:
-                    if i < retries - 1:  # 最後の試行でなければ
-                        time.sleep(1)  # 待機してから再試行
-                    else:
-                        st.error("アカウントの作成に失敗しました。後ほど再試行してください。")
+                except Exception as e:
+                    st.error(f"アカウントの作成に失敗しました: {e}")
 
     # コネクションを閉じる
     conn.close()
