@@ -16,8 +16,8 @@ def check_hashes(password, hashed_text):
 # テーブルを作成（存在しない場合）
 def create_user_table(conn):
     c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT, password TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS user_data(username TEXT, text_content TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT PRIMARY KEY, password TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS user_data(username TEXT PRIMARY KEY, text_content TEXT)')
     conn.commit()
 
 # 新しいユーザーを追加する関数
@@ -99,6 +99,9 @@ def main():
                     add_user(conn, new_user, make_hashes(new_password))
                     st.success("アカウントの作成に成功しました")
                     st.info("ログイン画面からログインしてください")
+                    break
+                except sqlite3.IntegrityError:
+                    st.error("このユーザー名は既に使用されています。別のユーザー名を選んでください。")
                     break
                 except sqlite3.OperationalError:
                     if i < retries - 1:  # 最後の試行でなければ
