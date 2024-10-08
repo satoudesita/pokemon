@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import sqlite3
 import hashlib
 import time
@@ -78,8 +77,11 @@ def main():
                 text_content = st.text_area("テキストを入力してください", value=user_text, height=300)
 
                 if st.button("保存"):
-                    save_user_text(conn, username, text_content)
-                    st.success("テキストを保存しました")
+                    try:
+                        save_user_text(conn, username, text_content)
+                        st.success("テキストを保存しました")
+                    except Exception as e:
+                        st.error(f"テキストの保存に失敗しました: {e}")
 
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
