@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 import hashlib
-import time
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -12,9 +11,7 @@ def make_hashes(password):
 
 # ハッシュ化されたパスワードをチェックする関数
 def check_hashes(password, hashed_text):
-    if make_hashes(password) == hashed_text:
-        return hashed_text
-    return False
+    return make_hashes(password) == hashed_text
 
 # テーブルを作成（存在しない場合）
 def create_user_table(conn):
@@ -22,12 +19,19 @@ def create_user_table(conn):
     c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT PRIMARY KEY, password TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS user_data(username TEXT PRIMARY KEY, text_content TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER)')
+    c.execute('CREATE TABLE IF NOT EXISTS class_data(username TEXT PRIMARY KEY, class_grade TEXT)')
     conn.commit()
 
 # 新しいユーザーを追加する関数
 def add_user(conn, username, password):
     c = conn.cursor()
     c.execute('INSERT INTO userstable(username, password) VALUES (?, ?)', (username, password))
+    conn.commit()
+
+# クラスデータを追加する関数
+def add_class_data(conn, username, class_grade):
+    c = conn.cursor()
+    c.execute('INSERT OR REPLACE INTO class_data(username, class_grade) VALUES (?, ?)', (username, class_grade))
     conn.commit()
 
 # ユーザー名の存在を確認する関数
@@ -40,21 +44,7 @@ def check_user_exists(conn, username):
 def login_user(conn, username, password):
     c = conn.cursor()
     c.execute('SELECT * FROM userstable WHERE username = ? AND password = ?', (username, password))
-    data = c.fetchall()
-    return data
-
-# ユーザーのテキストを保存する関数
-def save_user_text(conn, username, text_content):
-    c = conn.cursor()
-    c.execute('INSERT OR REPLACE INTO user_data(username, text_content) VALUES (?, ?)', (username, text_content))
-    conn.commit()
-
-# ユーザーのテキストを取得する関数
-def get_user_text(conn, username):
-    c = conn.cursor()
-    c.execute('SELECT text_content FROM user_data WHERE username = ?', (username,))
-    data = c.fetchone()
-    return data[0] if data else ""
+    return c.fetchall()
 
 # 学習データを保存する関数
 def save_study_data(conn, username, date, study_hours, score):
@@ -68,6 +58,13 @@ def get_study_data(conn, username):
     c = conn.cursor()
     c.execute('SELECT date, study_hours, score FROM study_data WHERE username = ?', (username,))
     return c.fetchall()
+
+# クラスデータを取得する関数
+def get_class_data(conn, username):
+    c = conn.cursor()
+    c.execute('SELECT class_grade FROM class_data WHERE username = ?', (username,))
+    data = c.fetchone()
+    return data[0] if data else ""
 
 def main():
     st.title("ログイン機能テスト")
@@ -84,6 +81,17 @@ def main():
         if 'username' in st.session_state:
             username = st.session_state['username']
             st.write(f"ようこそ、{username}さん！")
+
+            # クラスや学年の入力フォーム
+            class_grade = get_class_data(conn, username)  # データベースからクラスを取得
+            class_grade_input = st.sidebar.text_input("クラス/学年を入力してください", value=class_grade)
+            
+            if st.sidebar.button("クラス/学年を変更"):
+                if class_grade_input:
+                    add_class_data(conn, username, class_grade_input)
+                    st.sidebar.success('クラス/学年が変更されました！')
+                else:
+                    st.sidebar.warning('クラス/学年を入力してください。')
 
             # 学習データ入力フォーム
             with st.form(key='study_form'):
@@ -133,12 +141,15 @@ def main():
         password = st.sidebar.text_input("パスワードを入力してください", type='password')
 
         if st.sidebar.checkbox("ログイン"):
-            hashed_pswd = make_hashes(password)
-            result = login_user(conn, username, check_hashes(password, hashed_pswd))
+            result = login_user(conn, username, make_hashes(password))
 
             if result:
                 st.session_state['username'] = username
                 st.success("{}さんでログインしました".format(username))
+                
+                # 特定のユーザー名に対するメッセージ
+                if username == "佐藤葉緒":
+                    st.success("こんにちは、佐藤葉緒さん！特別なメッセージをお届けします。")
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
 
