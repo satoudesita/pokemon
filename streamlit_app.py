@@ -66,12 +66,21 @@ def get_class_data(conn, username):
     data = c.fetchone()
     return data[0] if data else ""
 
-# ユーザーのすべてのデータを削除する関数
+# 指定したユーザーのデータを削除する関数
 def delete_user_data(conn, username):
     c = conn.cursor()
     c.execute('DELETE FROM study_data WHERE username = ?', (username,))
     c.execute('DELETE FROM class_data WHERE username = ?', (username,))
     c.execute('DELETE FROM user_data WHERE username = ?', (username,))
+    conn.commit()
+
+# すべてのユーザーのデータを削除する関数
+def delete_all_users(conn):
+    c = conn.cursor()
+    c.execute('DELETE FROM userstable')
+    c.execute('DELETE FROM study_data')
+    c.execute('DELETE FROM class_data')
+    c.execute('DELETE FROM user_data')
     conn.commit()
 
 def main():
@@ -138,12 +147,9 @@ def main():
                     ax.set_ylabel('スコア')
                 st.pyplot(fig)
 
-                # 現在のユーザーのすべてのデータ削除ボタン
-                if st.button("すべてのデータを削除"):
-                    delete_user_data(conn, username)
-                    st.success("すべてのデータが削除されました。")
             else:
                 st.write('データがまだ入力されていません。')
+
         else:
             st.warning("ログインしていません。")
 
@@ -160,9 +166,12 @@ def main():
                 st.session_state['username'] = username
                 st.success("{}さんでログインしました".format(username))
                 
-                # 特定のユーザー名に対するメッセージ
-                if username == "佐藤葉緒":
-                    st.success("こんにちは、佐藤葉緒さん！特別なメッセージをお届けします。")
+                # 佐藤葉緒のためのデータ削除ボタン
+                if username == "さとうはお":
+                    st.success("こんにちは、佐藤葉緒さん！")
+                    if st.button("すべてのユーザーのデータを削除"):
+                        delete_all_users(conn)
+                        st.success("すべてのユーザーのデータが削除されました。")
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
 
