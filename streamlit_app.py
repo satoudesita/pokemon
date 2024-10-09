@@ -28,10 +28,13 @@ def add_user(conn, username, password):
     c.execute('INSERT INTO userstable(username, password) VALUES (?, ?)', (username, password))
     conn.commit()
 
-# クラスデータを追加する関数
-def add_class_data(conn, username, class_grade):
+# クラスデータを追加または更新する関数
+def update_class_data(conn, username, class_grade):
     c = conn.cursor()
-    c.execute('INSERT OR REPLACE INTO class_data(username, class_grade) VALUES (?, ?)', (username, class_grade))
+    # 既存のクラスデータを削除
+    c.execute('DELETE FROM class_data WHERE username = ?', (username,))
+    # 新しいクラスデータを追加
+    c.execute('INSERT INTO class_data(username, class_grade) VALUES (?, ?)', (username, class_grade))
     conn.commit()
 
 # ユーザー名の存在を確認する関数
@@ -65,6 +68,41 @@ def get_class_data(conn, username):
     c.execute('SELECT class_grade FROM class_data WHERE username = ?', (username,))
     data = c.fetchone()
     return data[0] if data else ""
+
+# クラス学年に応じたメッセージを取得する関数
+def get_class_message(class_grade):
+    messages = {
+        "1.1": "あ",
+        "1.2": "い",
+        "1.3": "う",
+        "1.4": "え",
+        "1.5": "お",
+        "1.6": "か",
+        "1.7": "き",
+        "1.8": "く",
+        "1.9": "け",
+        "2.0": "こ",
+        "2.1": "さ",
+        "2.2": "し",
+        "2.3": "す",
+        "2.4": "せ",
+        "2.5": "そ",
+        "2.6": "た",
+        "2.7": "ち",
+        "2.8": "つ",
+        "2.9": "て",
+        "3.0": "と",
+        "3.1": "な",
+        "3.2": "に",
+        "3.3": "ぬ",
+        "3.4": "ね",
+        "3.5": "の",
+        "3.6": "は",
+        "3.7": "ひ",
+        "3.8": "ふ",
+        "3.9": "へ",
+    }
+    return messages.get(class_grade, "不明な学年")
 
 # 指定したユーザーのデータを削除する関数
 def delete_user_data(conn, username):
@@ -101,54 +139,61 @@ def main():
 
             # クラスや学年の入力フォーム
             class_grade = get_class_data(conn, username)  # データベースからクラスを取得
-            class_grade_input = st.sidebar.text_input("クラス/学年を入力してください", value=class_grade)
+            class_grade_input = st.sidebar.text_input("クラス/学年を入力してください             （例１年１組→1.1）", value=class_grade)
             
             if st.sidebar.button("クラス/学年を変更"):
                 if class_grade_input:
-                    add_class_data(conn, username, class_grade_input)
+                    update_class_data(conn, username, class_grade_input)
                     st.sidebar.success('クラス/学年が変更されました！')
                 else:
                     st.sidebar.warning('クラス/学年を入力してください。')
 
-            # 学習データ入力フォーム
-            with st.form(key='study_form'):
-                date = st.date_input('学習日', value=datetime.now())
-                study_hours = st.number_input('学習時間（時間）', min_value=0.0, step=0.5)
-                score = st.number_input('テストのスコア', min_value=0, max_value=100, step=1)
-                submit_button = st.form_submit_button(label='データを保存')
+            # タブによる学習データとメッセージ表示
+            tab1, tab2 = st.tabs(["学習データ", "日課表"])
 
-            # データの保存処理
-            if submit_button:
-                save_study_data(conn, username, date.strftime('%Y-%m-%d'), study_hours, score)
-                st.success('データが保存されました！')
+            with tab1:
+                # 学習データ入力フォーム
+                with st.form(key='study_form'):
+                    date = st.date_input('学習日', value=datetime.now())
+                    study_hours = st.number_input('学習時間（時間）', min_value=0.0, step=0.5)
+                    score = st.number_input('テストのスコア', min_value=0, max_value=100, step=1)
+                    submit_button = st.form_submit_button(label='データを保存')
 
-            # 保存されたデータの表示
-            study_data = get_study_data(conn, username)
-            if study_data:
-                df = pd.DataFrame(study_data, columns=['Date', 'Study Hours', 'Score'])
-                st.write('### 現在の学習データ')
-                st.dataframe(df)
+                # データの保存処理
+                if submit_button:
+                    save_study_data(conn, username, date.strftime('%Y-%m-%d'), study_hours, score)
+                    st.success('データが保存されました！')
 
-                # グラフ描画のオプション
-                st.write('### グラフ表示')
-                plot_type = st.selectbox('表示するグラフを選択してください', ['学習時間', 'スコア'])
+                # 保存されたデータの表示
+                study_data = get_study_data(conn, username)
+                if study_data:
+                    df = pd.DataFrame(study_data, columns=['Date', 'Study Hours', 'Score'])
+                    st.write('### 現在の学習データ')
+                    st.dataframe(df)
 
-                # グラフ描画
-                fig, ax = plt.subplots()
-                if plot_type == '学習時間':
-                    ax.plot(df['Date'], df['Study Hours'], marker='o')
-                    ax.set_title('日別学習時間の推移')
-                    ax.set_xlabel('日付')
-                    ax.set_ylabel('学習時間（時間）')
-                elif plot_type == 'スコア':
-                    ax.plot(df['Date'], df['Score'], marker='o', color='orange')
-                    ax.set_title('日別スコアの推移')
-                    ax.set_xlabel('日付')
-                    ax.set_ylabel('スコア')
-                st.pyplot(fig)
+                    # グラフ描画のオプション
+                    st.write('### グラフ表示')
+                    plot_type = st.selectbox('表示するグラフを選択してください', ['学習時間', 'スコア'])
 
-            else:
-                st.write('データがまだ入力されていません。')
+                    # グラフ描画
+                    fig, ax = plt.subplots()
+                    if plot_type == '学習時間':
+                        ax.plot(df['Date'], df['Study Hours'], marker='o')
+                        ax.set_title('日別学習時間の推移')
+                        ax.set_xlabel('日付')
+                        ax.set_ylabel('学習時間（時間）')
+                    elif plot_type == 'スコア':
+                        ax.plot(df['Date'], df['Score'], marker='o', color='orange')
+                        ax.set_title('日別スコアの推移')
+                        ax.set_xlabel('日付')
+                        ax.set_ylabel('スコア')
+                    st.pyplot(fig)
+                else:
+                    st.write('データがまだ入力されていません。')
+
+            with tab2:
+                class_message = get_class_message(class_grade_input)
+                st.write(f"日課表: {class_message}")
 
         else:
             st.warning("ログインしていません。")
