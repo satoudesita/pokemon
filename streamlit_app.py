@@ -66,6 +66,14 @@ def get_class_data(conn, username):
     data = c.fetchone()
     return data[0] if data else ""
 
+# ユーザーのすべてのデータを削除する関数
+def delete_user_data(conn, username):
+    c = conn.cursor()
+    c.execute('DELETE FROM study_data WHERE username = ?', (username,))
+    c.execute('DELETE FROM class_data WHERE username = ?', (username,))
+    c.execute('DELETE FROM user_data WHERE username = ?', (username,))
+    conn.commit()
+
 def main():
     st.title("ログイン機能テスト")
     
@@ -129,6 +137,11 @@ def main():
                     ax.set_xlabel('日付')
                     ax.set_ylabel('スコア')
                 st.pyplot(fig)
+
+                # 現在のユーザーのすべてのデータ削除ボタン
+                if st.button("すべてのデータを削除"):
+                    delete_user_data(conn, username)
+                    st.success("すべてのデータが削除されました。")
             else:
                 st.write('データがまだ入力されていません。')
         else:
