@@ -155,7 +155,7 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
 
             # タブによる学習データ、日課表、目標設定の表示
-            tab1, tab2, tab3 = st.tabs(["学習データ", "日課表", "目標設定"])
+            tab1, tab2, tab3 = st.tabs(["学習データ", "日課表", "学習ゲーム"])
 
             with tab1:
                 # 学習データ入力フォーム
@@ -202,15 +202,22 @@ def main():
                 st.write(f"日課表: {class_message}")
 
             with tab3:
-                st.subheader("学習目標を設定します")
-                goal = st.text_input("学習目標を入力してください")
+                st.subheader("学習ゲーム")
+                st.text('素因数分解')
+                st.markdown("[素因数分解](https://shoblog.iiyan.net/)", unsafe_allow_html=True)
+                st.text('マスmatics')
+                st.markdown("[マスmatics](https://sukepc0824.github.io/masu-matics/)", unsafe_allow_html=True)
+                st.text('英単語')
+                st.markdown("[英単語](https://gatieitanngo-jjmvn8dyjndf9ow9hunxfj.streamlit.app/)", unsafe_allow_html=True)
+                st.text('歴史')
+                st.markdown("[歴史](https://satoudesta31080-cjwty9bid5qndqsqogzjbq.streamlit.app/)", unsafe_allow_html=True)
+                st.text('四字熟語')
+                st.markdown("[四字熟語](https://iqkxbsojo8sg5sddsolvqp.streamlit.app/)", unsafe_allow_html=True)
+                st.text('地理')
+                st.markdown("[地理](https://xquamsmdle8xatfl7df6my.streamlit.app/)", unsafe_allow_html=True)
+                st.text('生物')
+                st.markdown("[生物](https://fobegkereok6v9z6ra2bpb.streamlit.app/)", unsafe_allow_html=True)
 
-                if st.button("目標を保存"):
-                    if goal:
-                        save_goal(conn, username, goal)
-                        st.success(f"目標「{goal}」が保存されました！")
-                    else:
-                        st.warning("目標を入力してください。")
 
         else:
             st.warning("ログインしていません。")
