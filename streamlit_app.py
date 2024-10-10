@@ -204,19 +204,19 @@ def main():
             with tab3:
                 st.subheader("学習ゲーム")
                 st.text('素因数分解')
-                st.markdown("[素因数分解](https://shoblog.iiyan.net/)", unsafe_allow_html=True)
+                st.link_button("素因数分解", "https://shoblog.iiyan.net/")
                 st.text('マスmatics')
-                st.markdown("[マスmatics](https://sukepc0824.github.io/masu-matics/)", unsafe_allow_html=True)
+                st.link_button("マスmatics", "https://sukepc0824.github.io/masu-matics/")
                 st.text('英単語')
-                st.markdown("[英単語](https://gatieitanngo-jjmvn8dyjndf9ow9hunxfj.streamlit.app/)", unsafe_allow_html=True)
+                st.link_button("英単語", "https://gatieitanngo-jjmvn8dyjndf9ow9hunxfj.streamlit.app/")
                 st.text('歴史')
-                st.markdown("[歴史](https://satoudesta31080-cjwty9bid5qndqsqogzjbq.streamlit.app/)", unsafe_allow_html=True)
+                st.link_button("歴史", "https://satoudesta31080-cjwty9bid5qndqsqogzjbq.streamlit.app/")
                 st.text('四字熟語')
-                st.markdown("[四字熟語](https://iqkxbsojo8sg5sddsolvqp.streamlit.app/)", unsafe_allow_html=True)
+                st.link_button("四字熟語", "https://iqkxbsojo8sg5sddsolvqp.streamlit.app/")
                 st.text('地理')
-                st.markdown("[地理](https://xquamsmdle8xatfl7df6my.streamlit.app/)", unsafe_allow_html=True)
+                st.link_button("地理", "https://xquamsmdle8xatfl7df6my.streamlit.app/")
                 st.text('生物')
-                st.markdown("[生物](https://fobegkereok6v9z6ra2bpb.streamlit.app/)", unsafe_allow_html=True)
+                st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
 
 
         else:
