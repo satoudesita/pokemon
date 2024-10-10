@@ -22,7 +22,22 @@ def create_user_table(conn):
     c.execute('CREATE TABLE IF NOT EXISTS class_data(username TEXT PRIMARY KEY, class_grade TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS goals(username TEXT PRIMARY KEY, goal TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS projects(username TEXT, project_name TEXT, progress REAL)')
+    c.execute('CREATE TABLE IF NOT EXISTS events(username TEXT, date TEXT, description TEXT)')  # 追加
     conn.commit()
+
+# イベントを保存する関数
+def save_event(conn, username, date, description):
+    c = conn.cursor()
+    c.execute('INSERT INTO events(username, date, description) VALUES (?, ?, ?)',
+              (username, date, description))
+    conn.commit()
+
+# イベントデータを取得する関数
+def get_events(conn, username, date):
+    c = conn.cursor()
+    c.execute('SELECT description FROM events WHERE username = ? AND date = ?', (username, date))
+    return c.fetchall()
+
 
 # 新しいユーザーを追加する関数
 def add_user(conn, username, password):
@@ -161,7 +176,7 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
 
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4, tab5 = st.tabs(["学習データ", "日課表", "学習ゲーム", "AI", "予定"])
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["学習データ", "日課表", "学習ゲーム", "AI", "予定","カレンダー"])
 
             with tab1:
                 # 学習データ入力フォーム
@@ -262,9 +277,31 @@ def main():
                         st.success(f"予定 '{project_to_delete}' が削除されました！")
                 else:
                     st.write("現在、予定はありません。予定があれば追加してください。")
+            with tab6:
+                with tab6:
+                    st.subheader("カレンダーイベント管理")
+    
+                    selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
+                    event_description = st.text_input("イベントの説明を入力してください")
+
+                    # イベントを追加するボタン
+                    if st.button("イベントを追加"):
+                        save_event(conn, username, selected_date.strftime('%Y-%m-%d'), event_description)
+                        st.success("イベントが追加されました！")
+
+    # 選択した日のイベントを表示
+                    st.write(f"### {selected_date.strftime('%Y-%m-%d')} のイベント")
+                    events = get_events(conn, username, selected_date.strftime('%Y-%m-%d'))
+    
+                    if events:
+                        for event in events:
+                            st.write(f"- {event[0]}")
+                    else:
+                        st.write("この日にイベントはありません。")
+
                 
-        else:
-            st.warning("ログインしていません。")
+
+        
 
     elif choice == "ログイン":
         st.subheader("ログイン画面です")
