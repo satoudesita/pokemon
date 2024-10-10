@@ -20,6 +20,7 @@ def create_user_table(conn):
     c.execute('CREATE TABLE IF NOT EXISTS user_data(username TEXT PRIMARY KEY, text_content TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER)')
     c.execute('CREATE TABLE IF NOT EXISTS class_data(username TEXT PRIMARY KEY, class_grade TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS goals(username TEXT PRIMARY KEY, goal TEXT)')  # 目標のテーブルを追加
     conn.commit()
 
 # 新しいユーザーを追加する関数
@@ -31,9 +32,7 @@ def add_user(conn, username, password):
 # クラスデータを追加または更新する関数
 def update_class_data(conn, username, class_grade):
     c = conn.cursor()
-    # 既存のクラスデータを削除
     c.execute('DELETE FROM class_data WHERE username = ?', (username,))
-    # 新しいクラスデータを追加
     c.execute('INSERT INTO class_data(username, class_grade) VALUES (?, ?)', (username, class_grade))
     conn.commit()
 
@@ -104,12 +103,19 @@ def get_class_message(class_grade):
     }
     return messages.get(class_grade, "不明な学年")
 
+# 目標を保存する関数
+def save_goal(conn, username, goal):
+    c = conn.cursor()
+    c.execute('REPLACE INTO goals(username, goal) VALUES (?, ?)', (username, goal))
+    conn.commit()
+
 # 指定したユーザーのデータを削除する関数
 def delete_user_data(conn, username):
     c = conn.cursor()
     c.execute('DELETE FROM study_data WHERE username = ?', (username,))
     c.execute('DELETE FROM class_data WHERE username = ?', (username,))
     c.execute('DELETE FROM user_data WHERE username = ?', (username,))
+    c.execute('DELETE FROM goals WHERE username = ?', (username,))  # 目標データを削除
     conn.commit()
 
 # すべてのユーザーのデータを削除する関数
@@ -119,6 +125,7 @@ def delete_all_users(conn):
     c.execute('DELETE FROM study_data')
     c.execute('DELETE FROM class_data')
     c.execute('DELETE FROM user_data')
+    c.execute('DELETE FROM goals')  # 目標データを削除
     conn.commit()
 
 def main():
@@ -137,10 +144,9 @@ def main():
             username = st.session_state['username']
             st.write(f"ようこそ、{username}さん！")
 
-            # クラスや学年の入力フォーム
             class_grade = get_class_data(conn, username)  # データベースからクラスを取得
-            class_grade_input = st.sidebar.text_input("クラス/学年を入力してください             （例１年１組→1.1）", value=class_grade)
-            
+            class_grade_input = st.sidebar.text_input("クラス/学年を入力してください（例１年１組→1.1）", value=class_grade)
+
             if st.sidebar.button("クラス/学年を変更"):
                 if class_grade_input:
                     update_class_data(conn, username, class_grade_input)
@@ -148,8 +154,8 @@ def main():
                 else:
                     st.sidebar.warning('クラス/学年を入力してください。')
 
-            # タブによる学習データとメッセージ表示
-            tab1, tab2 = st.tabs(["学習データ", "日課表"])
+            # タブによる学習データ、日課表、目標設定の表示
+            tab1, tab2, tab3 = st.tabs(["学習データ", "日課表", "目標設定"])
 
             with tab1:
                 # 学習データ入力フォーム
@@ -195,6 +201,17 @@ def main():
                 class_message = get_class_message(class_grade_input)
                 st.write(f"日課表: {class_message}")
 
+            with tab3:
+                st.subheader("学習目標を設定します")
+                goal = st.text_input("学習目標を入力してください")
+
+                if st.button("目標を保存"):
+                    if goal:
+                        save_goal(conn, username, goal)
+                        st.success(f"目標「{goal}」が保存されました！")
+                    else:
+                        st.warning("目標を入力してください。")
+
         else:
             st.warning("ログインしていません。")
 
@@ -211,7 +228,7 @@ def main():
                 st.session_state['username'] = username
                 st.success("{}さんでログインしました".format(username))
                 
-                # 佐藤葉緒のためのデータ削除ボタン
+                # 特定ユーザーのためのデータ削除ボタン
                 if username == "さとうはお":
                     st.success("こんにちは、佐藤葉緒さん！")
                     if st.button("すべてのユーザーのデータを削除"):
@@ -226,7 +243,6 @@ def main():
         new_password = st.text_input("パスワードを入力してください", type='password')
 
         if st.button("サインアップ"):
-            # ユーザー名がすでに存在するか確認
             if check_user_exists(conn, new_user):
                 st.error("このユーザー名は既に使用されています。別のユーザー名を選んでください。")
             else:
