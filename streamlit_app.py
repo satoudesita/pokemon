@@ -272,7 +272,7 @@ def main():
 
                     # プロジェクト削除機能
                     project_to_delete = st.selectbox("削除するプロジェクト", [p[0] for p in projects])
-                    if st.button("予定"):
+                    if st.button("削除"):
                         delete_project(conn, username, project_to_delete)
                         st.success(f"予定 '{project_to_delete}' が削除されました！")
                 else:
