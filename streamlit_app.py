@@ -4,7 +4,6 @@ import hashlib
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
-import ollama
 
 # パスワードをハッシュ化する関数
 def make_hashes(password):
