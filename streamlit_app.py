@@ -214,6 +214,7 @@ def main():
             if result:
                 st.session_state['username'] = username
                 st.success("{}さんでログインしました".format(username))
+                st.success('ホーム画面に移動して下さい')
                 
                 if username == "さとうはお":
                     st.success("こんにちは、佐藤葉緒さん！")
