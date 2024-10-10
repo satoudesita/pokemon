@@ -21,6 +21,7 @@ def create_user_table(conn):
     c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER)')
     c.execute('CREATE TABLE IF NOT EXISTS class_data(username TEXT PRIMARY KEY, class_grade TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS goals(username TEXT PRIMARY KEY, goal TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS projects(username TEXT, project_name TEXT, progress REAL)')
     conn.commit()
 
 # 新しいユーザーを追加する関数
@@ -93,6 +94,7 @@ def delete_user_data(conn, username):
     c.execute('DELETE FROM class_data WHERE username = ?', (username,))
     c.execute('DELETE FROM user_data WHERE username = ?', (username,))
     c.execute('DELETE FROM goals WHERE username = ?', (username,))
+    c.execute('DELETE FROM projects WHERE username = ?', (username,))
     conn.commit()
 
 # すべてのユーザーのデータを削除する関数
@@ -103,6 +105,33 @@ def delete_all_users(conn):
     c.execute('DELETE FROM class_data')
     c.execute('DELETE FROM user_data')
     c.execute('DELETE FROM goals')
+    c.execute('DELETE FROM projects')
+    conn.commit()
+
+# プロジェクトを保存する関数
+def save_project(conn, username, project_name, project_progress):
+    c = conn.cursor()
+    c.execute('INSERT INTO projects(username, project_name, progress) VALUES (?, ?, ?)',
+              (username, project_name, project_progress))
+    conn.commit()
+
+# 既存のプロジェクトを取得する関数
+def get_projects(conn, username):
+    c = conn.cursor()
+    c.execute('SELECT project_name, progress FROM projects WHERE username = ?', (username,))
+    return c.fetchall()
+
+# プロジェクト進捗を更新する関数
+def update_project_progress(conn, username, project_name, new_progress):
+    c = conn.cursor()
+    c.execute('UPDATE projects SET progress = ? WHERE username = ? AND project_name = ?',
+              (new_progress, username, project_name))
+    conn.commit()
+
+# プロジェクトを削除する関数
+def delete_project(conn, username, project_name):
+    c = conn.cursor()
+    c.execute('DELETE FROM projects WHERE username = ? AND project_name = ?', (username, project_name))
     conn.commit()
 
 def main():
@@ -132,7 +161,7 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
 
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4 = st.tabs(["学習データ", "日課表", "学習ゲーム", "AI"])
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(["学習データ", "日課表", "学習ゲーム", "AI", "予定"])
 
             with tab1:
                 # 学習データ入力フォーム
@@ -196,9 +225,44 @@ def main():
                 st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
                 
             with tab4:
-                st.link_button('a',"https://chatgpt.com/")
+                st.link_button('a', "https://chatgpt.com/")
                 
+            with tab5:
+                st.subheader("予定メモ")
+                
+                project_name = st.text_input("予定を入力してください")
+                project_progress = st.number_input("進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
 
+                if st.button("予定を追加"):
+                    if project_name:
+                        save_project(conn, username, project_name, project_progress)
+                        st.success(f"予定 '{project_name}' を追加しました！")
+                    else:
+                        st.warning("予定を入力してください。")
+
+                # 既存のプロジェクトを表示
+                st.write("### 予定")
+                projects = get_projects(conn, username)
+                if projects:
+                    project_df = pd.DataFrame(projects, columns=["予定", "進捗"])
+                    st.dataframe(project_df)
+
+                    # 進捗更新機能
+                    project_to_update = st.selectbox("進捗を更新する予定", [p[0] for p in projects])
+                    new_progress = st.number_input("新しい進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
+
+                    if st.button("進捗を更新"):
+                        update_project_progress(conn, username, project_to_update, new_progress)
+                        st.success(f"予定 '{project_to_update}' の進捗を更新しました！")
+
+                    # プロジェクト削除機能
+                    project_to_delete = st.selectbox("削除するプロジェクト", [p[0] for p in projects])
+                    if st.button("予定"):
+                        delete_project(conn, username, project_to_delete)
+                        st.success(f"予定 '{project_to_delete}' が削除されました！")
+                else:
+                    st.write("現在、予定はありません。予定があれば追加してください。")
+                
         else:
             st.warning("ログインしていません。")
 
