@@ -2,8 +2,9 @@ import streamlit as st
 import sqlite3
 import hashlib
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from datetime import datetime
+import streamlit.components.v1 as components
 
 # パスワードをハッシュ化する関数
 def make_hashes(password):
@@ -18,7 +19,7 @@ def create_user_table(conn):
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT PRIMARY KEY, password TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS user_data(username TEXT PRIMARY KEY, text_content TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER, subject TEXT)')  # subject列を追加
+    c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER, subject TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS class_data(username TEXT PRIMARY KEY, class_grade TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS goals(username TEXT PRIMARY KEY, goal TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS projects(username TEXT, project_name TEXT, progress REAL)')
@@ -28,8 +29,7 @@ def create_user_table(conn):
 # イベントを保存する関数
 def save_event(conn, username, date, description):
     c = conn.cursor()
-    c.execute('INSERT INTO events(username, date, description) VALUES (?, ?, ?)',
-              (username, date, description))
+    c.execute('INSERT INTO events(username, date, description) VALUES (?, ?, ?)', (username, date, description))
     conn.commit()
 
 # イベントデータを取得する関数
@@ -37,7 +37,6 @@ def get_events(conn, username, date):
     c = conn.cursor()
     c.execute('SELECT description FROM events WHERE username = ? AND date = ?', (username, date))
     return c.fetchall()
-
 
 # 新しいユーザーを追加する関数
 def add_user(conn, username, password):
@@ -67,8 +66,7 @@ def login_user(conn, username, password):
 # 学習データを保存する関数
 def save_study_data(conn, username, date, study_hours, score, subject):
     c = conn.cursor()
-    c.execute('INSERT INTO study_data(username, date, study_hours, score, subject) VALUES (?, ?, ?, ?, ?)',
-              (username, date, study_hours, score, subject))
+    c.execute('INSERT INTO study_data(username, date, study_hours, score, subject) VALUES (?, ?, ?, ?, ?)', (username, date, study_hours, score, subject))
     conn.commit()
 
 # ユーザーの学習データを取得する関数
@@ -126,8 +124,7 @@ def delete_all_users(conn):
 # プロジェクトを保存する関数
 def save_project(conn, username, project_name, project_progress):
     c = conn.cursor()
-    c.execute('INSERT INTO projects(username, project_name, progress) VALUES (?, ?, ?)',
-              (username, project_name, project_progress))
+    c.execute('INSERT INTO projects(username, project_name, progress) VALUES (?, ?, ?)', (username, project_name, project_progress))
     conn.commit()
 
 # 既存のプロジェクトを取得する関数
@@ -139,8 +136,7 @@ def get_projects(conn, username):
 # プロジェクト進捗を更新する関数
 def update_project_progress(conn, username, project_name, new_progress):
     c = conn.cursor()
-    c.execute('UPDATE projects SET progress = ? WHERE username = ? AND project_name = ?',
-              (new_progress, username, project_name))
+    c.execute('UPDATE projects SET progress = ? WHERE username = ? AND project_name = ?', (new_progress, username, project_name))
     conn.commit()
 
 # プロジェクトを削除する関数
@@ -151,7 +147,7 @@ def delete_project(conn, username, project_name):
 
 def main():
     st.title("ログイン機能テスト")
-    
+   
     menu = ["ホーム", "ログイン", "サインアップ"]
     choice = st.sidebar.selectbox("メニュー", menu)
 
@@ -164,195 +160,124 @@ def main():
         if 'username' in st.session_state:
             username = st.session_state['username']
             st.write(f"ようこそ、{username}さん！")
-
+ 
             class_grade = get_class_data(conn, username)
             class_grade_input = st.sidebar.text_input("クラス/学年を入力してください（例１年１組→1.1）", value=class_grade)
-
+ 
             if st.sidebar.button("クラス/学年を変更"):
                 if class_grade_input:
                     update_class_data(conn, username, class_grade_input)
                     st.sidebar.success('クラス/学年が変更されました！')
                 else:
                     st.sidebar.warning('クラス/学年を入力してください。')
-
+ 
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["学習データ", "日課表", "学習ゲーム", "AI", "予定","カレンダー"])
-
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["学習データ", "日課表", "学習ゲーム", "AI", "予定", "カレンダー"])
+ 
             with tab1:
                 # 学習データ入力フォーム
                 with st.form(key='study_form'):
                     date = st.date_input('学習日', value=datetime.now())
                     study_hours = st.number_input('学習時間（時間）', min_value=0.0, step=0.5)
                     score = st.number_input('テストのスコア', min_value=0, max_value=100, step=1)
+                    subject = st.selectbox('教科', ['数学', '英語', '理科', '社会', '国語'])
+                    submit_button = st.form_submit_button(label='学習データを保存')
+                    if submit_button:
+                        save_study_data(conn, username, date, study_hours, score, subject)
+                        st.success('学習データが保存されました！')
 
-                    # 教科選択用のドロップダウンメニューを追加
-                    subject = st.selectbox('教科を選択してください', ['数学', '英語', '科学', '社会', '国語'])
-
-                    submit_button = st.form_submit_button(label='データを保存')
-
-                # データの保存処理
-                if submit_button:
-                    save_study_data(conn, username, date.strftime('%Y-%m-%d'), study_hours, score, subject)
-                    st.success('データが保存されました！')
-
-                # 保存されたデータの表示
+                # 学習データの表示
                 study_data = get_study_data(conn, username)
                 if study_data:
-                    df = pd.DataFrame(study_data, columns=['Date', 'Study Hours', 'Score', 'Subject'])
-
-                    # 教科を選択するドロップダウンメニュー
-                    selected_subject = st.selectbox('表示する教科を選択してください', ['すべて'] + df['Subject'].unique().tolist())
-
-                    if selected_subject != 'すべて':
-                        df = df[df['Subject'] == selected_subject]
-
-                        st.write('### 現在の学習データ')
-                        st.dataframe(df)
-
-                    # グラフ描画のオプション
-                    plot_type = st.selectbox('表示するグラフを選択してください', ['学習時間', 'スコア'])
-
-                    # グラフ描画
-                    fig, ax = plt.subplots()
-                    if plot_type == '学習時間':
-                        ax.plot(df['Date'], df['Study Hours'], marker='o')
-                        ax.set_title(f'{selected_subject}の日別学習時間の推移')
-                        ax.set_xlabel('日付')
-                        ax.set_ylabel('学習時間（時間）')
-                    elif plot_type == 'スコア':
-                        ax.plot(df['Date'], df['Score'], marker='o', color='orange')
-                        ax.set_title(f'{selected_subject}の日別スコアの推移')
-                        ax.set_xlabel('日付')
-                        ax.set_ylabel('スコア')
-    
-                    st.pyplot(fig)
+                    df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
+                    st.dataframe(df)
+                    # グラフ表示
+                    fig = go.Figure()
+                    fig.add_trace(go.Scatter(x=df['日付'], y=df['学習時間'], mode='lines+markers', name='学習時間'))
+                    fig.add_trace(go.Scatter(x=df['日付'], y=df['スコア'], mode='lines+markers', name='スコア'))
+                    fig.update_layout(title='学習データのグラフ', xaxis_title='日付', yaxis_title='値')
+                    st.plotly_chart(fig)
                 else:
-                    st.write('データがまだ入力されていません。')
-
-    
+                    st.write("学習データがありません。")
 
             with tab2:
-                class_message = get_class_message(class_grade_input)
-                st.write(f"日課表: {class_message}")
+                # 日課表機能の実装
+                st.write("日課表の機能を実装予定です。")
 
             with tab3:
-                st.subheader("学習ゲーム")
-                st.text('素因数分解')
-                st.link_button("素因数分解", "https://shoblog.iiyan.net/")
-                st.text('マスmatics')
-                st.link_button("マスmatics", "https://sukepc0824.github.io/masu-matics/")
-                st.text('英単語')
-                st.link_button("英単語", "https://gatieitanngo-jjmvn8dyjndf9ow9hunxfj.streamlit.app/")
-                st.text('歴史')
-                st.link_button("歴史", "https://satoudesta31080-cjwty9bid5qndqsqogzjbq.streamlit.app/")
-                st.text('四字熟語')
-                st.link_button("四字熟語", "https://iqkxbsojo8sg5sddsolvqp.streamlit.app/")
-                st.text('地理')
-                st.link_button("地理", "https://xquamsmdle8xatfl7df6my.streamlit.app/")
-                st.text('生物')
-                st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
-                
+                # 学習ゲーム機能の実装
+                st.write("学習ゲームの機能を実装予定です。")
+
             with tab4:
-                st.link_button('a', "https://chatgpt.com/")
-                
+                # AI機能の実装
+                st.write("AIの機能を実装予定です。")
+
             with tab5:
-                st.subheader("予定メモ")
-                
-                project_name = st.text_input("予定を入力してください")
-                project_progress = st.number_input("進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
+                # 予定管理
+                st.subheader("予定の管理")
+                date_input = st.date_input('予定日', value=datetime.now())
+                description_input = st.text_input("予定内容")
+                if st.button("予定を保存"):
+                    save_event(conn, username, date_input, description_input)
+                    st.success("予定が保存されました。")
 
-                if st.button("予定を追加"):
-                    if project_name:
-                        save_project(conn, username, project_name, project_progress)
-                        st.success(f"予定 '{project_name}' を追加しました！")
-                    else:
-                        st.warning("予定を入力してください。")
-
-                # 既存のプロジェクトを表示
-                st.write("### 予定")
-                projects = get_projects(conn, username)
-                if projects:
-                    project_df = pd.DataFrame(projects, columns=["予定", "進捗"])
-                    st.dataframe(project_df)
-
-                    # 進捗更新機能
-                    project_to_update = st.selectbox("進捗を更新する予定", [p[0] for p in projects])
-                    new_progress = st.number_input("新しい進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
-
-                    if st.button("進捗を更新"):
-                        update_project_progress(conn, username, project_to_update, new_progress)
-                        st.success(f"予定 '{project_to_update}' の進捗を更新しました！")
-
-                    # プロジェクト削除機能
-                    project_to_delete = st.selectbox("削除するプロジェクト", [p[0] for p in projects])
-                    if st.button("削除"):
-                        delete_project(conn, username, project_to_delete)
-                        st.success(f"予定 '{project_to_delete}' が削除されました！")
+                # 予定の表示
+                events = get_events(conn, username, date_input)
+                if events:
+                    st.write("予定:")
+                    for event in events:
+                        st.write(event[0])
                 else:
-                    st.write("現在、予定はありません。予定があれば追加してください。")
+                    st.write("この日の予定はありません。")
+
             with tab6:
-                with tab6:
-                    st.subheader("カレンダーイベント管理")
-    
-                    selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
-                    event_description = st.text_input("イベントの説明を入力してください")
+                # カレンダー機能の実装
+                st.write("カレンダーの機能を実装予定です。")
 
-                    # イベントを追加するボタン
-                    if st.button("イベントを追加"):
-                        save_event(conn, username, selected_date.strftime('%Y-%m-%d'), event_description)
-                        st.success("イベントが追加されました！")
+            # Chatbase チャットボットを埋め込む
+            components.html(
+                """
+                <script>
+                    window.embeddedChatbotConfig = {
+                        chatbotId: "uZHqK1b61C7QU9eF1MmxO",
+                        domain: "www.chatbase.co"
+                    }
+                </script>
+                <script
+                    src="https://www.chatbase.co/embed.min.js"
+                    chatbotId="uZHqK1b61C7QU9eF1MmxO"
+                    domain="www.chatbase.co"
+                    defer>
+                </script>
+                """,
+                height=500  # 高さを調整
+            )
 
-    # 選択した日のイベントを表示
-                    st.write(f"### {selected_date.strftime('%Y-%m-%d')} のイベント")
-                    events = get_events(conn, username, selected_date.strftime('%Y-%m-%d'))
-    
-                    if events:
-                        for event in events:
-                            st.write(f"- {event[0]}")
-                    else:
-                        st.write("この日にイベントはありません。")
-
-                
-
-        
+        else:
+            st.warning("ログインしてください。")
 
     elif choice == "ログイン":
-        st.subheader("ログイン画面です")
-
-        username = st.sidebar.text_input("ユーザー名を入力してください")
-        password = st.sidebar.text_input("パスワードを入力してください", type='password')
-
-        if st.sidebar.checkbox("ログイン"):
-            result = login_user(conn, username, make_hashes(password))
-
-            if result:
+        st.subheader("ログイン")
+        username = st.text_input("ユーザー名")
+        password = st.text_input("パスワード", type='password')
+        if st.button("ログイン"):
+            if login_user(conn, username, make_hashes(password)):
                 st.session_state['username'] = username
-                st.success("{}さんでログインしました".format(username))
-                st.success('ホーム画面に移動して下さい')
-                
-                if username == "さとうはお":
-                    st.success("こんにちは、佐藤葉緒さん！")
-                    if st.button("すべてのユーザーのデータを削除"):
-                        delete_all_users(conn)
-                        st.success("すべてのユーザーのデータが削除されました。")
+                st.success(f"ようこそ、{username}さん！")
+                st.experimental_rerun()
             else:
-                st.warning("ユーザー名かパスワードが間違っています")
+                st.error("ユーザー名またはパスワードが間違っています。")
 
     elif choice == "サインアップ":
-        st.subheader("新しいアカウントを作成します")
-        new_user = st.text_input("ユーザー名を入力してください")
-        new_password = st.text_input("パスワードを入力してください", type='password')
-
+        st.subheader("サインアップ")
+        new_username = st.text_input("新しいユーザー名")
+        new_password = st.text_input("新しいパスワード", type='password')
         if st.button("サインアップ"):
-            if check_user_exists(conn, new_user):
-                st.error("このユーザー名は既に使用されています。別のユーザー名を選んでください。")
+            if check_user_exists(conn, new_username):
+                st.error("このユーザー名はすでに使用されています。")
             else:
-                try:
-                    add_user(conn, new_user, make_hashes(new_password))
-                    st.success("アカウントの作成に成功しました")
-                    st.info("ログイン画面からログインしてください")
-                except Exception as e:
-                    st.error(f"アカウントの作成に失敗しました: {e}")
+                add_user(conn, new_username, make_hashes(new_password))
+                st.success("アカウントが作成されました！ログインしてください。")
 
     # コネクションを閉じる
     conn.close()
