@@ -183,8 +183,8 @@ def main():
     # 学習データ入力フォーム
                 with st.form(key='study_form'):
                     date = st.date_input('学習日', value=datetime.now())
-                    study_hours = st.number_input('学習時間（時間）', min_value=0.0, step=0.5)
-                    score = st.number_input('テストのスコア', min_value=0, max_value=100, step=1)
+                    study_hours = st.number_input('学習時間（時間）', min_value=-100.0, step=0.5)
+                    score = st.number_input('テストのスコア', min_value=-100, max_value=100, step=1)
                     subject = st.selectbox('教科を選択してください', ['数学', '英語', '科学', '社会', '国語'])
                     submit_button = st.form_submit_button(label='データを保存')
 
