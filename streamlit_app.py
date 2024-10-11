@@ -18,11 +18,11 @@ def create_user_table(conn):
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT PRIMARY KEY, password TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS user_data(username TEXT PRIMARY KEY, text_content TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER)')
+    c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER, subject TEXT)')  # subject列を追加
     c.execute('CREATE TABLE IF NOT EXISTS class_data(username TEXT PRIMARY KEY, class_grade TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS goals(username TEXT PRIMARY KEY, goal TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS projects(username TEXT, project_name TEXT, progress REAL)')
-    c.execute('CREATE TABLE IF NOT EXISTS events(username TEXT, date TEXT, description TEXT)')  # 追加
+    c.execute('CREATE TABLE IF NOT EXISTS events(username TEXT, date TEXT, description TEXT)')
     conn.commit()
 
 # イベントを保存する関数
@@ -65,16 +65,16 @@ def login_user(conn, username, password):
     return c.fetchall()
 
 # 学習データを保存する関数
-def save_study_data(conn, username, date, study_hours, score):
+def save_study_data(conn, username, date, study_hours, score, subject):
     c = conn.cursor()
-    c.execute('INSERT INTO study_data(username, date, study_hours, score) VALUES (?, ?, ?, ?)',
-              (username, date, study_hours, score))
+    c.execute('INSERT INTO study_data(username, date, study_hours, score, subject) VALUES (?, ?, ?, ?, ?)',
+              (username, date, study_hours, score, subject))
     conn.commit()
 
 # ユーザーの学習データを取得する関数
 def get_study_data(conn, username):
     c = conn.cursor()
-    c.execute('SELECT date, study_hours, score FROM study_data WHERE username = ?', (username,))
+    c.execute('SELECT date, study_hours, score, subject FROM study_data WHERE username = ?', (username,))
     return c.fetchall()
 
 # クラスデータを取得する関数
@@ -184,39 +184,52 @@ def main():
                     date = st.date_input('学習日', value=datetime.now())
                     study_hours = st.number_input('学習時間（時間）', min_value=0.0, step=0.5)
                     score = st.number_input('テストのスコア', min_value=0, max_value=100, step=1)
+
+                    # 教科選択用のドロップダウンメニューを追加
+                    subject = st.selectbox('教科を選択してください', ['数学', '英語', '科学', '社会', '国語'])
+
                     submit_button = st.form_submit_button(label='データを保存')
 
                 # データの保存処理
                 if submit_button:
-                    save_study_data(conn, username, date.strftime('%Y-%m-%d'), study_hours, score)
+                    save_study_data(conn, username, date.strftime('%Y-%m-%d'), study_hours, score, subject)
                     st.success('データが保存されました！')
 
                 # 保存されたデータの表示
                 study_data = get_study_data(conn, username)
                 if study_data:
-                    df = pd.DataFrame(study_data, columns=['Date', 'Study Hours', 'Score'])
-                    st.write('### 現在の学習データ')
-                    st.dataframe(df)
+                    df = pd.DataFrame(study_data, columns=['Date', 'Study Hours', 'Score', 'Subject'])
+
+                    # 教科を選択するドロップダウンメニュー
+                    selected_subject = st.selectbox('表示する教科を選択してください', ['すべて'] + df['Subject'].unique().tolist())
+
+                    if selected_subject != 'すべて':
+                        df = df[df['Subject'] == selected_subject]
+
+                        st.write('### 現在の学習データ')
+                        st.dataframe(df)
 
                     # グラフ描画のオプション
-                    st.write('### グラフ表示')
                     plot_type = st.selectbox('表示するグラフを選択してください', ['学習時間', 'スコア'])
 
                     # グラフ描画
                     fig, ax = plt.subplots()
                     if plot_type == '学習時間':
                         ax.plot(df['Date'], df['Study Hours'], marker='o')
-                        ax.set_title('日別学習時間の推移')
+                        ax.set_title(f'{selected_subject}の日別学習時間の推移')
                         ax.set_xlabel('日付')
                         ax.set_ylabel('学習時間（時間）')
                     elif plot_type == 'スコア':
                         ax.plot(df['Date'], df['Score'], marker='o', color='orange')
-                        ax.set_title('日別スコアの推移')
+                        ax.set_title(f'{selected_subject}の日別スコアの推移')
                         ax.set_xlabel('日付')
                         ax.set_ylabel('スコア')
+    
                     st.pyplot(fig)
                 else:
                     st.write('データがまだ入力されていません。')
+
+    
 
             with tab2:
                 class_message = get_class_message(class_grade_input)
