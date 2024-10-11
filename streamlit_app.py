@@ -183,55 +183,58 @@ def main():
     # 学習データ入力フォーム
                 with st.form(key='study_form'):
                     date = st.date_input('学習日', value=datetime.now())
-                    study_hours = st.number_input('学習時間（時間）', min_value=-100.0,value=5, step=0.5)
-                    score = st.number_input('テストのスコア', min_value=-100, max_value=100,value=50, step=1)
+                    study_hours = st.number_input('学習時間（時間）', min_value=0.0, value=5.0, step=0.5)
+                    score = st.number_input('テストのスコア', min_value=0, max_value=100, value=50, step=1)
                     subject = st.selectbox('教科を選択してください', ['数学', '英語', '科学', '社会', '国語'])
+        
+        # 送信ボタン
                     submit_button = st.form_submit_button(label='データを保存')
 
-    # データの保存処理
+    # 送信ボタンが押されたときの処理
                 if submit_button:
                     save_study_data(conn, username, date.strftime('%Y-%m-%d'), study_hours, score, subject)
                     st.success('データが保存されました！')
 
-                # 保存されたデータの表示
-                study_data = get_study_data(conn, username)
-                if study_data:
-                    df = pd.DataFrame(study_data, columns=['Date', 'Study Hours', 'Score', 'Subject'])
+        # 保存されたデータの表示
+                    study_data = get_study_data(conn, username)
+                    if study_data:
+                        df = pd.DataFrame(study_data, columns=['Date', 'Study Hours', 'Score', 'Subject'])
 
-                    # 教科を選択するマルチセレクトボックス
-                    selected_subjects = st.multiselect('表示する教科を選択してください', ['すべて'] + df['Subject'].unique().tolist())
+                        # 教科を選択するマルチセレクトボックス
+                        selected_subjects = st.multiselect('表示する教科を選択してください', ['すべて'] + df['Subject'].unique().tolist())
 
-                    # すべてを選択している場合の処理
-                    if 'すべて' in selected_subjects:
-                        filtered_df = df
+                        # すべてを選択している場合の処理
+                        if 'すべて' in selected_subjects:
+                            filtered_df = df
+                        else:
+                            filtered_df = df[df['Subject'].isin(selected_subjects)]
+
+                        # グラフ描画のオプション
+                        plot_type = st.selectbox('表示するグラフを選択してください', ['学習時間', 'スコア'])
+
+                        # グラフ描画
+                        if plot_type == '学習時間':
+                            grouped = filtered_df.groupby(['Date', 'Subject'])['Study Hours'].sum().reset_index()
+                            fig = go.Figure()
+                            for subject in selected_subjects:
+                                if subject != 'すべて':
+                                    subject_data = grouped[grouped['Subject'] == subject]
+                                    fig.add_trace(go.Scatter(x=subject_data['Date'], y=subject_data['Study Hours'], mode='lines+markers', name=subject))
+                            fig.update_layout(title='教科ごとの学習時間の推移', xaxis_title='日付', yaxis_title='学習時間（時間）')
+
+                        elif plot_type == 'スコア':
+                            grouped = filtered_df.groupby(['Date', 'Subject'])['Score'].sum().reset_index()
+                            fig = go.Figure()
+                            for subject in selected_subjects:
+                                if subject != 'すべて':
+                                    subject_data = grouped[grouped['Subject'] == subject]
+                                    fig.add_trace(go.Scatter(x=subject_data['Date'], y=subject_data['Score'], mode='lines+markers', name=subject, line=dict(color='orange')))
+                            fig.update_layout(title='教科ごとのスコアの推移', xaxis_title='日付', yaxis_title='スコア')
+
+                        st.plotly_chart(fig)
                     else:
-                        filtered_df = df[df['Subject'].isin(selected_subjects)]
+                        st.write('データがまだ入力されていません。')
 
-                    # グラフ描画のオプション
-                    plot_type = st.selectbox('表示するグラフを選択してください', ['学習時間', 'スコア'])
-
-                    # グラフ描画
-                    if plot_type == '学習時間':
-                        grouped = filtered_df.groupby(['Date', 'Subject'])['Study Hours'].sum().reset_index()
-                        fig = go.Figure()
-                        for subject in selected_subjects:
-                            if subject != 'すべて':
-                                subject_data = grouped[grouped['Subject'] == subject]
-                                fig.add_trace(go.Scatter(x=subject_data['Date'], y=subject_data['Study Hours'], mode='lines+markers', name=subject))
-                        fig.update_layout(title='教科ごとの学習時間の推移', xaxis_title='日付', yaxis_title='学習時間（時間）')
-
-                    elif plot_type == 'スコア':
-                        grouped = filtered_df.groupby(['Date', 'Subject'])['Score'].sum().reset_index()
-                        fig = go.Figure()
-                        for subject in selected_subjects:
-                            if subject != 'すべて':
-                                subject_data = grouped[grouped['Subject'] == subject]
-                                fig.add_trace(go.Scatter(x=subject_data['Date'], y=subject_data['Score'], mode='lines+markers', name=subject, line=dict(color='orange')))
-                        fig.update_layout(title='教科ごとのスコアの推移', xaxis_title='日付', yaxis_title='スコア')
-
-                    st.plotly_chart(fig)
-                else:
-                    st.write('データがまだ入力されていません。')
 
 
             with tab4:
