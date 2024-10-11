@@ -233,7 +233,7 @@ def main():
 
                         st.plotly_chart(fig)
                     else:
-                        st.write('データがまだ入力されていません。')
+                        st.write('データがまだ入力されていません')
 
 
 
