@@ -294,32 +294,55 @@ def main():
                
             with tab5:
                 st.subheader("予定メモ")
-               
+
                 project_name = st.text_input("予定を入力してください")
                 project_progress = st.number_input("進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
- 
+
                 if st.button("予定を追加"):
                     if project_name:
                         save_project(conn, username, project_name, project_progress)
                         st.success(f"予定 '{project_name}' を追加しました！")
                     else:
                         st.warning("予定を入力してください。")
- 
+
                 # 既存のプロジェクトを表示
                 st.write("### 予定")
                 projects = get_projects(conn, username)
                 if projects:
                     project_df = pd.DataFrame(projects, columns=["予定", "進捗"])
                     st.dataframe(project_df)
- 
+
+                    # 進捗の横棒グラフを表示
+                    fig = go.Figure()
+                    for project in projects:
+                        # 進捗の値を100%スケーリング
+                        progress_value = project[1]
+                        fig.add_trace(go.Bar(
+                            x=[progress_value],  # 進捗
+                            y=[project[0]],  # 予定名
+                            orientation='h',  # 横棒
+                            name=project[0],
+                            text=f"{progress_value}%",  # テキストラベル
+                            textposition='inside'  # テキストの位置
+                        ))
+
+                    fig.update_layout(
+                        title='プロジェクト進捗 (100%基準)',
+                        xaxis_title='進捗 (%)',
+                        yaxis_title='予定',
+                        xaxis=dict(range=[0, 100]),  # X軸の範囲を0から100に設定
+                        barmode='group'
+                    )
+                    st.plotly_chart(fig)
+
                     # 進捗更新機能
                     project_to_update = st.selectbox("進捗を更新する予定", [p[0] for p in projects])
                     new_progress = st.number_input("新しい進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
- 
+
                     if st.button("進捗を更新"):
                         update_project_progress(conn, username, project_to_update, new_progress)
                         st.success(f"予定 '{project_to_update}' の進捗を更新しました！")
- 
+
                     # プロジェクト削除機能
                     project_to_delete = st.selectbox("削除するプロジェクト", [p[0] for p in projects])
                     if st.button("削除"):
@@ -327,6 +350,7 @@ def main():
                         st.success(f"予定 '{project_to_delete}' が削除されました！")
                 else:
                     st.write("現在、予定はありません。予定があれば追加してください。")
+
             with tab6:
                 st.subheader("カレンダー")
                 selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
