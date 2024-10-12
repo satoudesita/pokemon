@@ -310,7 +310,8 @@ def main():
                 projects = get_projects(conn, username)
                 if projects:
                     project_df = pd.DataFrame(projects, columns=["予定", "進捗"])
-                    st.dataframe(project_df)
+                    if st.button("データ"):
+                        st.dataframe(project_df)
 
                     # 進捗の横棒グラフを表示
                     fig = go.Figure()
