@@ -255,7 +255,7 @@ def main():
                
             with tab2:
                 if st.button("使い方"):
-                    st.print("説明")
+                    st.text("説明")
                 # Chatbase チャットボットを埋め込む
                 components.html(
                     """
