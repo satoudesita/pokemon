@@ -89,12 +89,12 @@ def get_class_data(conn, username):
 def load_timetable(sheet_number):
     df = pd.read_excel('日課表.xlsx', sheet_name=sheet_number)
     return df
-
+ 
 # クラスに基づいてシート番号を決定する関数
 def get_sheet_number(class_grade):
     sheet_mapping = {
-        "1.1": 0, "1.2": 1, "1.3": 2, "1.4": 3, "1.5": 4,"1.6": 5, "1.7": 6, "1.8": 7, 
-        "2.1": 8, "2.2": 9,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 15, "2.8": 16, 
+        "1.1": 0, "1.2": 1, "1.3": 2, "1.4": 3, "1.5": 4,"1.6": 5, "1.7": 6, "1.8": 7,
+        "2.1": 8, "2.2": 9,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 15, "2.8": 16,
         "3.1": 17, "3.2": 18, "3.3": 19, "3.4": 20, "3.5": 21,"3.6": 22, "3.7": 23,"3.8": 24, "3.9": 25,
     }
     return sheet_mapping.get(class_grade, -1)  # -1 は無効なクラスを示す
@@ -192,30 +192,30 @@ def main():
                     if submit_button:
                         save_study_data(conn, username, date, study_hours, score, subject)
                         st.success('学習データが保存されました！')
-
+ 
                 # 学習データの表示
                 study_data = get_study_data(conn, username)
                 if study_data:
                     df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
                     if st.button("学習、スコアデータ表示"):
                         st.dataframe(df)
-
-                    
+ 
+                   
                     # マルチセレクトで教科を選択
                     selected_subjects = st.multiselect('教科を選択してください', df['教科'].unique())
-
+ 
                  # グラフ表示
                     gurafu = st.selectbox('グラフ', ['学習時間', 'スコア'])
-
+ 
                     # figを初期化
                     fig = go.Figure()
-
+ 
                     if selected_subjects:
                         filtered_df = df[df['教科'].isin(selected_subjects)]
-
+ 
                         for subject in selected_subjects:
                             subject_df = filtered_df[filtered_df['教科'] == subject]
-        
+       
                             if gurafu == '学習時間':
                                 fig.add_trace(go.Scatter(
                                     x=subject_df['日付'],
@@ -236,15 +236,15 @@ def main():
                                 fig.update_layout(title='選択された教科のスコアのグラフ',
                                                 xaxis_title='日付',
                                                 yaxis_title='スコア')
-
+ 
                         st.plotly_chart(fig)
                     else:
                         st.write("教科が選択されていません。")
-
-            
+ 
+           
             with tab4:
                 st.subheader("日課表")
-
+ 
                 # クラスをもとに日課表を取得
                 sheet_number = get_sheet_number(class_grade_input)
                 if sheet_number != -1:
@@ -290,21 +290,21 @@ def main():
                     """,
                     height=400 # 高さを調整
                 )
-
+ 
                
             with tab5:
                 st.subheader("予定メモ")
-
+ 
                 project_name = st.text_input("予定を入力してください")
                 project_progress = st.number_input("進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
-
+ 
                 if st.button("予定を追加"):
                     if project_name:
                         save_project(conn, username, project_name, project_progress)
                         st.success(f"予定 '{project_name}' を追加しました！")
                     else:
                         st.warning("予定を入力してください。")
-
+ 
                 # 既存のプロジェクトを表示
                 st.write("### 予定")
                 projects = get_projects(conn, username)
@@ -312,7 +312,7 @@ def main():
                     project_df = pd.DataFrame(projects, columns=["予定", "進捗"])
                     if st.button("データ"):
                         st.dataframe(project_df)
-
+ 
                     # 進捗の横棒グラフを表示
                     fig = go.Figure()
                     for project in projects:
@@ -326,7 +326,7 @@ def main():
                             text=f"{progress_value}%",  # テキストラベル
                             textposition='inside'  # テキストの位置
                         ))
-
+ 
                     fig.update_layout(
                         title='プロジェクト進捗 (100%基準)',
                         xaxis_title='進捗 (%)',
@@ -335,15 +335,15 @@ def main():
                         barmode='group'
                     )
                     st.plotly_chart(fig)
-
+ 
                     # 進捗更新機能
                     project_to_update = st.selectbox("進捗を更新する予定", [p[0] for p in projects])
                     new_progress = st.number_input("新しい進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
-
+ 
                     if st.button("進捗を更新"):
                         update_project_progress(conn, username, project_to_update, new_progress)
                         st.success(f"予定 '{project_to_update}' の進捗を更新しました！")
-
+ 
                     # プロジェクト削除機能
                     project_to_delete = st.selectbox("削除するプロジェクト", [p[0] for p in projects])
                     if st.button("削除"):
@@ -351,7 +351,7 @@ def main():
                         st.success(f"予定 '{project_to_delete}' が削除されました！")
                 else:
                     st.write("現在、予定はありません。予定があれば追加してください。")
-
+ 
             with tab6:
                 st.subheader("カレンダー")
                 selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
@@ -413,4 +413,3 @@ def main():
  
 if __name__ == '__main__':
     main()
- 
