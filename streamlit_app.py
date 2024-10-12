@@ -195,8 +195,10 @@ def main():
                 study_data = get_study_data(conn, username)
                 if study_data:
                     df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
-                    st.dataframe(df)
+                    if st.button("学習、スコアデータ表示"):
+                        st.dataframe(df)
 
+                    
                     # マルチセレクトで教科を選択
                     selected_subjects = st.multiselect('教科を選択してください', df['教科'].unique())
 
