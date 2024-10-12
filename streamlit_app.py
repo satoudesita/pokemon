@@ -235,7 +235,7 @@ def main():
                     timetable = load_timetable(sheet_number)
                     st.dataframe(timetable)
                 else:
-                    st.warning("無効なクラス/学年が入力されました。")
+                    st.warning("無効なクラス/学年が入力されました")
             with tab3:
                 st.subheader("学習ゲーム")
                 st.text('素因数分解')
