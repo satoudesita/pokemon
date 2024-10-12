@@ -213,18 +213,34 @@ def main():
                     if selected_subjects:
                         filtered_df = df[df['教科'].isin(selected_subjects)]
 
-                        if gurafu == '学習時間':
-                            fig.add_trace(go.Scatter(x=filtered_df['日付'], y=filtered_df['学習時間'], mode='lines+markers', name='学習時間'))
-                            fig.update_layout(title='選択された教科の学習時間のグラフ', xaxis_title='日付', yaxis_title='学習時間（時間）')
-                            st.plotly_chart(fig)
-                        elif gurafu == 'スコア':
-                            fig.add_trace(go.Scatter(x=filtered_df['日付'], y=filtered_df['スコア'], mode='lines+markers', name='スコア'))
-                            fig.update_layout(title='選択された教科のスコアのグラフ', xaxis_title='日付', yaxis_title='スコア')
-                            st.plotly_chart(fig)
+                        for subject in selected_subjects:
+                            subject_df = filtered_df[filtered_df['教科'] == subject]
+        
+                            if gurafu == '学習時間':
+                                fig.add_trace(go.Scatter(
+                                    x=subject_df['日付'],
+                                    y=subject_df['学習時間'],
+                                    mode='lines+markers',
+                                    name=subject  # 教科名を表示
+                                ))
+                                fig.update_layout(title='選択された教科の学習時間のグラフ',
+                                                xaxis_title='日付',
+                                                    yaxis_title='学習時間（時間）')
+                            elif gurafu == 'スコア':
+                                fig.add_trace(go.Scatter(
+                                    x=subject_df['日付'],
+                                    y=subject_df['スコア'],
+                                    mode='lines+markers',
+                                    name=subject  # 教科名を表示
+                                ))
+                                fig.update_layout(title='選択された教科のスコアのグラフ',
+                                                xaxis_title='日付',
+                                                yaxis_title='スコア')
+
+                        st.plotly_chart(fig)
                     else:
                         st.write("教科が選択されていません。")
-                else:
-                    st.write("学習データがありません。")
+
             
             with tab4:
                 st.subheader("日課表")
