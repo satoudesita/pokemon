@@ -239,7 +239,7 @@ def main():
             with tab3:
                 st.subheader("学習ゲーム")
                 st.text('素因数分解')
-                st.link_button("素因数分解", "https://shoblog.iiyan.net/")
+                st.link_button("素因数分解", "https://sukepc0824.github.io/factorization/")
                 st.text('マスmatics')
                 st.link_button("マスmatics", "https://sukepc0824.github.io/masu-matics/")
                 st.text('英単語')
