@@ -227,6 +227,7 @@ def main():
 
 
             with tab4:
+                df = pd.read_excel("日課表.xlsx", sheet_name="Sheet1", header=0, usecols="A:F")
                 class_message = get_class_message(class_grade_input)
                 st.write(f"日課表: {class_message}")
  
