@@ -85,17 +85,19 @@ def get_class_data(conn, username):
     data = c.fetchone()
     return data[0] if data else ""
  
-# クラス学年に応じたメッセージを取得する関数
-def get_class_message(class_grade):
-    messages = {
-        "1.1": "あ", "1.2": "い", "1.3": "う", "1.4": "え", "1.5": "お",
-        "1.6": "か", "1.7": "き", "1.8": "く", "1.9": "け", "2.0": "こ",
-        "2.1": "さ", "2.2": "し", "2.3": "す", "2.4": "せ", "2.5": "そ",
-        "2.6": "た", "2.7": "ち", "2.8": "つ", "2.9": "て", "3.0": "と",
-        "3.1": "な", "3.2": "に", "3.3": "ぬ", "3.4": "ね", "3.5": "の",
-        "3.6": "は", "3.7": "ひ", "3.8": "ふ", "3.9": "へ",
+# Excelデータを読み込む関数
+def load_timetable(sheet_number):
+    df = pd.read_excel('日課表.xlsx', sheet_name=sheet_number)
+    return df
+
+# クラスに基づいてシート番号を決定する関数
+def get_sheet_number(class_grade):
+    sheet_mapping = {
+        "1.1": 0, "1.2": 1, "1.3": 2, "1.4": 3, "1.5": 4,"1.6": 5, "1.7": 6, "1.8": 7, 
+        "2.1": 8, "2.2": 9,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 15, "2.8": 16, 
+        "3.1": 17, "3.2": 18, "3.3": 19, "3.4": 20, "3.5": 21,"3.6": 22, "3.7": 23,"3.8": 24, "3.9": 25,
     }
-    return messages.get(class_grade, "不明な学年")
+    return sheet_mapping.get(class_grade, -1)  # -1 は無効なクラスを示す
  
 # 目標を保存する関数
 def save_goal(conn, username, goal):
@@ -223,14 +225,17 @@ def main():
                         st.write("教科が選択されていません。")
                 else:
                     st.write("学習データがありません。")
-
-
-
+            
             with tab4:
-                df = pd.read_excel("日課表.xlsx", sheet_name="Sheet1", header=0, usecols="A:F")
-                class_message = get_class_message(class_grade_input)
-                st.write(f"日課表: {class_message}")
- 
+                st.subheader("日課表")
+
+                # クラスをもとに日課表を取得
+                sheet_number = get_sheet_number(class_grade_input)
+                if sheet_number != -1:
+                    timetable = load_timetable(sheet_number)
+                    st.dataframe(timetable)
+                else:
+                    st.warning("無効なクラス/学年が入力されました。")
             with tab3:
                 st.subheader("学習ゲーム")
                 st.text('素因数分解')
