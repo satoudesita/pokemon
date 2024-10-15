@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_autorefresh import st_autorefresh
 import sqlite3
 import hashlib
 import pandas as pd
@@ -95,8 +94,8 @@ def load_timetable(sheet_number):
 def get_sheet_number(class_grade):
     sheet_mapping = {
         "1.1": 0, "1.2": 1, "1.3": 2, "1.4": 3, "1.5": 4,"1.6": 5, "1.7": 6, "1.8": 7,
-        "2.1": 8, "2.2": 9,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.8": 10, "3.1": 11, "3.2": 12, "3.3": 13, "3.4": 14,"3.5": 15, "3.6": 16,
-        "3.7": 17, "3.8": 18, "3.9": 19
+        "2.1": 8, "2.2": 9,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 15, "2.8": 16,
+        "3.1": 17, "3.2": 18, "3.3": 19, "3.4": 20, "3.5": 21,"3.6": 22, "3.7": 23,"3.8": 24, "3.9": 25,
     }
     return sheet_mapping.get(class_grade, -1)  # -1 は無効なクラスを示す
  
@@ -152,13 +151,7 @@ def delete_project(conn, username, project_name):
     c = conn.cursor()
     c.execute('DELETE FROM projects WHERE username = ? AND project_name = ?', (username, project_name))
     conn.commit()
-
-def get_projects(conn, username):
-    c = conn.cursor()
-    c.execute('SELECT project_name, progress FROM projects WHERE username = ?', (username,))
-    projects = c.fetchall()
-    return projects
-
+ 
 def main():
     st.title("モチベーション向上")
    
@@ -186,7 +179,7 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
  
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["学習データ", "AI","オープンチャット", "学習ゲーム", "日課表", "予定", "カレンダー"])
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["学習データ", "AI", "学習ゲーム", "日課表", "予定", "カレンダー"])
  
             with tab1:
     # 学習データ入力フォーム
@@ -249,7 +242,7 @@ def main():
                         st.write("教科が選択されていません。")
  
            
-            with tab5:
+            with tab4:
                 st.subheader("日課表")
  
                 # クラスをもとに日課表を取得
@@ -259,7 +252,7 @@ def main():
                     st.dataframe(timetable)
                 else:
                     st.warning("無効なクラス/学年が入力されました")
-            with tab4:
+            with tab3:
                 st.subheader("学習ゲーム")
                 st.text('素因数分解')
                 st.link_button("素因数分解", "https://sukepc0824.github.io/factorization/")
@@ -275,49 +268,7 @@ def main():
                 st.link_button("地理", "https://xquamsmdle8xatfl7df6my.streamlit.app/")
                 st.text('生物')
                 st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
-            with tab3:
-                st.subheader("オープンチャットアプリ")
-
-                # データベースに接続
-                conn = sqlite3.connect('chat.db')
-                c = conn.cursor()
-
-                # メッセージテーブルの作成
-                c.execute('''
-                    CREATE TABLE IF NOT EXISTS messages (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        user TEXT,
-                        message TEXT,
-                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-                    )
-                ''')
-                conn.commit()
-
-                # ページのリフレッシュを3秒ごとに設定
-                st_autorefresh(interval=3000)  # 3秒ごとにリフレッシュ
-
-                # ユーザーのメッセージ入力
-                user_msg = st.text_input("メッセージを入力してください")
-
-                # 送信ボタンを追加
-                if st.button("送信"):
-                    if user_msg:  # メッセージが空でない場合のみ送信
-                        c.execute("INSERT INTO messages (user, message) VALUES (?, ?)", ('ユーザー', user_msg))
-                        conn.commit()
-                        st.success("メッセージが送信されました！")
-
-                # メッセージの読み込み
-                c.execute("SELECT user, message, timestamp FROM messages ORDER BY timestamp DESC")
-                messages = c.fetchall()
-
-                # メッセージ表示
-                for user, message, timestamp in messages:
-                    st.write(f"{user} ({timestamp}): {message}")
-
-                # データベース接続を閉じる
-                conn.close()
-
-
+               
             with tab2:
                 if st.button("使い方"):
                     st.text("説明")
@@ -341,7 +292,7 @@ def main():
                 )
  
                
-            with tab6:
+            with tab5:
                 st.subheader("予定メモ")
  
                 project_name = st.text_input("予定を入力してください")
@@ -401,7 +352,7 @@ def main():
                 else:
                     st.write("現在、予定はありません。予定があれば追加してください。")
  
-            with tab7:
+            with tab6:
                 st.subheader("カレンダー")
                 selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
                 event_description = st.text_input("イベントの説明を入力してください")
