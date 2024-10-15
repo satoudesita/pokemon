@@ -270,13 +270,15 @@ def main():
                 st.text('生物')
                 st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
             with tab3:
+                
                 st.subheader("オープンチャットアプリ")
 
                 # データベースに接続
                 conn = sqlite3.connect('chat.db')
                 c = conn.cursor()
 
-                # メッセージテーブルの作成
+                # テーブルを削除して再作成
+                c.execute("DROP TABLE IF EXISTS messages")  # 既存のテーブルを削除
                 c.execute('''CREATE TABLE IF NOT EXISTS messages
                             (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
                 conn.commit()
@@ -307,6 +309,7 @@ def main():
 
                 # データベース接続を閉じる
                 conn.close()
+
 
                             
 
