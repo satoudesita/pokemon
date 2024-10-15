@@ -270,6 +270,8 @@ def main():
                 st.text('生物')
                 st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
             with tab3:
+                st.subheader("オープンチャットアプリ")
+
                 # データベースに接続
                 conn = sqlite3.connect('chat.db')
                 c = conn.cursor()
@@ -279,20 +281,14 @@ def main():
                             (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
                 conn.commit()
 
-                # タイトル
-                st.title("オープンチャットアプリ")
-
-                # ページのリフレッシュを3秒ごとに設定
-                st_autorefresh(interval=3000)  # 3秒ごとにリフレッシュ
-
                 # ユーザーのメッセージ入力
                 user_msg = st.text_input("メッセージを入力してください")
 
                 # メッセージ送信時の処理
                 if user_msg:
-                    c.execute("INSERT INTO messages (user, message) VALUES (?, ?)", ('ユーザー', user_msg))
+                    c.execute("INSERT INTO messages (user, message) VALUES (?, ?)", (st.session_state['username'], user_msg))
                     conn.commit()
-                    user_msg = ""  # メッセージ送信後に入力フィールドをリセット
+                    st.text_input("メッセージを入力してください", value="", key="msg_input")  # 入力フィールドをリセット
 
                 # メッセージの読み込み
                 c.execute("SELECT user, message, timestamp FROM messages ORDER BY timestamp DESC")
@@ -302,8 +298,9 @@ def main():
                 for user, message, timestamp in messages:
                     st.write(f"{user} ({timestamp}): {message}")
 
+                # コネクションを閉じる
                 conn.close()
-               
+
             with tab2:
                 if st.button("使い方"):
                     st.text("説明")
