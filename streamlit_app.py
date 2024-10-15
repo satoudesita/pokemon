@@ -152,7 +152,13 @@ def delete_project(conn, username, project_name):
     c = conn.cursor()
     c.execute('DELETE FROM projects WHERE username = ? AND project_name = ?', (username, project_name))
     conn.commit()
- 
+
+def get_projects(conn, username):
+    c = conn.cursor()
+    c.execute('SELECT project_name, progress FROM projects WHERE username = ?', (username,))
+    projects = c.fetchall()
+    return projects
+
 def main():
     st.title("モチベーション向上")
    
@@ -271,11 +277,11 @@ def main():
                 st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
             with tab3:
                 st.subheader("オープンチャットアプリ")
-                
+
                 # データベースに接続
                 conn = sqlite3.connect('chat.db')
                 c = conn.cursor()
-                
+
                 # メッセージテーブルの作成
                 c.execute('''
                     CREATE TABLE IF NOT EXISTS messages (
@@ -286,7 +292,7 @@ def main():
                     )
                 ''')
                 conn.commit()
-                
+
                 # ページのリフレッシュを3秒ごとに設定
                 st_autorefresh(interval=3000)  # 3秒ごとにリフレッシュ
 
@@ -299,11 +305,11 @@ def main():
                         c.execute("INSERT INTO messages (user, message) VALUES (?, ?)", ('ユーザー', user_msg))
                         conn.commit()
                         st.success("メッセージが送信されました！")
-                
+
                 # メッセージの読み込み
                 c.execute("SELECT user, message, timestamp FROM messages ORDER BY timestamp DESC")
                 messages = c.fetchall()
-                
+
                 # メッセージ表示
                 for user, message, timestamp in messages:
                     st.write(f"{user} ({timestamp}): {message}")
@@ -311,8 +317,6 @@ def main():
                 # データベース接続を閉じる
                 conn.close()
 
-
-                            
 
             with tab2:
                 if st.button("使い方"):
