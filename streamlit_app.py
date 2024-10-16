@@ -14,6 +14,24 @@ def make_hashes(password):
 # ハッシュ化されたパスワードをチェックする関数
 def check_hashes(password, hashed_text):
     return make_hashes(password) == hashed_text
+
+# チャット履歴を削除する関数
+def delete_all_messages(conn):
+    c = conn.cursor()
+    c.execute('DELETE FROM messages')
+    conn.commit()
+
+def create_tables(con):
+    cc = con.cursor()
+    cc.execute('''
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            message TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    con.commit()
  
 # テーブルを作成（存在しない場合）
 def create_user_table(conn):
@@ -352,7 +370,7 @@ def main():
                         st.success(f"予定 '{project_to_delete}' が削除されました！")
                 else:
                     st.write("現在、予定はありません。予定があれば追加してください。")
-            with tab3:
+            with tab3:  # Chat Tab
                 # データベースに接続
                 con = sqlite3.connect('chat.db')
                 cc = con.cursor()
@@ -388,8 +406,7 @@ def main():
                 for message in messages:
                     st.write(f"{message[0]}: {message[1]}")  # ユーザー名とメッセージを表示
 
-                # データベース接続を閉じる
-                con.close()
+
 
 
             with tab7:
@@ -410,7 +427,6 @@ def main():
                         st.write(f"- {event[0]}")
                 else:
                     st.write("この日にイベントはありません。")
- 
     elif choice == "ログイン":
         st.subheader("ログイン画面です")
         username = st.sidebar.text_input("ユーザー名を入力してください")
@@ -426,11 +442,17 @@ def main():
 
                 if username == "さとうはお":
                     st.success("こんにちは、佐藤葉緒さん！")
+
                     if st.button("すべてのユーザーのデータを削除"):
-                        delete_all_users(conn)
+                        delete_all_users(conn)  # チャット履歴を削除する関数を呼び出す
                         st.success("すべてのユーザーのデータが削除されました。")
+
+                    if st.button("すべてのチャット履歴を削除"):
+                        delete_all_messages(con)
+                        st.success("すべてのチャット履歴が削除されました！")
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
+
 
  
     elif choice == "サインアップ":
@@ -454,3 +476,4 @@ def main():
  
 if __name__ == '__main__':
     main()
+    
