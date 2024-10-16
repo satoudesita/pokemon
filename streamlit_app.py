@@ -174,7 +174,7 @@ def delete_project(conn, username, project_name):
 def main():
     st.title("モチベーション向上")
    
-    menu = ["ホーム", "ログイン", "サインアップ"]
+    menu = ["ホーム", "ログイン", "サインアップ","使い方"]
     choice = st.sidebar.selectbox("メニュー", menu)
  
     # データベースに接続
@@ -471,6 +471,9 @@ def main():
                     st.info("ログイン画面からログインしてください")
                 except Exception as e:
                     st.error(f"アカウントの作成に失敗しました: {e}")
+    
+    if choice == "使い方":
+        st.text("d")
  
     # コネクションを閉じる
     conn.close()
