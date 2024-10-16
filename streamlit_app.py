@@ -373,22 +373,24 @@ def main():
 
                 # 送信ボタンを追加
                 if st.button("送信"):
-                    if user_msg:  # メッセージが空でない場合のみ送信
-                        cc.execute("INSERT INTO messages (user, message) VALUES (?, ?)", ('ユーザー', user_msg))
+                    if user_msg and 'username' in st.session_state:  # ユーザー名が存在するか確認
+                        cc.execute("INSERT INTO messages (user, message) VALUES (?, ?)", (st.session_state['username'], user_msg))
                         con.commit()
                         st.success("メッセージが送信されました！")
+                    else:
+                        st.warning("メッセージが空です。")
 
                 # メッセージの読み込み
-                cc.execute("SELECT user, message, timestamp FROM messages ORDER BY timestamp DESC")
+                cc.execute("SELECT user, message FROM messages ORDER BY timestamp DESC")
                 messages = cc.fetchall()
 
                 # メッセージ表示
-                for user, message, timestamp in messages:
-                    st.write(f"{user} ({timestamp}): {message}")
+                for message in messages:
+                    st.write(f"{message[0]}: {message[1]}")  # ユーザー名とメッセージを表示
 
                 # データベース接続を閉じる
                 con.close()
-                
+
 
             with tab7:
                 st.subheader("カレンダー")
@@ -413,23 +415,23 @@ def main():
         st.subheader("ログイン画面です")
         username = st.sidebar.text_input("ユーザー名を入力してください")
         password = st.sidebar.text_input("パスワードを入力してください", type='password')
- 
+
         if st.sidebar.checkbox("ログイン"):
             result = login_user(conn, username, make_hashes(password))
- 
+
             if result:
                 st.session_state['username'] = username
                 st.success("{}さんでログインしました".format(username))
                 st.success('ホーム画面に移動して下さい')
- 
+
                 if username == "さとうはお":
                     st.success("こんにちは、佐藤葉緒さん！")
                     if st.button("すべてのユーザーのデータを削除"):
                         delete_all_users(conn)
-                        delete_all_users(con)
                         st.success("すべてのユーザーのデータが削除されました。")
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
+
  
     elif choice == "サインアップ":
         st.subheader("新しいアカウントを作成します")
