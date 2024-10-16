@@ -183,6 +183,7 @@ def main():
  
     if choice == "ホーム":
         st.subheader("ホーム画面")
+        st.subheader("左上の矢印を押してください")
         if 'username' in st.session_state:
             username = st.session_state['username']
             st.write(f"ようこそ、{username}さん！")
