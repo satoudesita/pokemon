@@ -292,7 +292,7 @@ def main():
             with tab2:
                 if st.button("使い方"):
                     st.text("説明")
-                    st.text("現在は使えませんが、左下のチャットマークを押すとAIと学習についてはなすことができます。")
+                    st.text("現在は使えませんが、左下のチャットマークを押すとAIと学習についてはなすことができます")
                 # Chatbase チャットボットを埋め込む
                 components.html(
                     """
@@ -407,7 +407,14 @@ def main():
                 # メッセージ表示
                 for message in messages:
                     st.write(f"{message[0]}: {message[1]}")  # ユーザー名とメッセージを表示
-
+                if username == "さとうはお":
+                    if st.button("すべてのチャット履歴を削除"):
+                            delete_all_messages(con)
+                            st.success("すべてのチャット履歴が削除されました！") 
+                elif username == "ykeishirou":
+                    if st.button("すべてのチャット履歴を削除"):
+                            delete_all_messages(con)
+                            st.success("すべてのチャット履歴が削除されました！") 
 
 
 
@@ -449,9 +456,6 @@ def main():
                         delete_all_users(conn)  # チャット履歴を削除する関数を呼び出す
                         st.success("すべてのユーザーのデータが削除されました。")
 
-                    if st.button("すべてのチャット履歴を削除"):
-                        delete_all_messages(con)
-                        st.success("すべてのチャット履歴が削除されました！")
                 elif username == "ykeishirou":
                     st.success("こんにちは、ykeishirouさん！")
 
@@ -459,9 +463,6 @@ def main():
                         delete_all_users(conn)  # チャット履歴を削除する関数を呼び出す
                         st.success("すべてのユーザーのデータが削除されました。")
 
-                    if st.button("すべてのチャット履歴を削除"):
-                        delete_all_messages(con)
-                        st.success("すべてのチャット履歴が削除されました！") 
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
 
