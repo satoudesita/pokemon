@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 import sqlite3
 import hashlib
 import pandas as pd
@@ -179,7 +180,7 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
  
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["学習データ", "AI", "学習ゲーム", "日課表", "予定", "カレンダー"])
+            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7= st.tabs(["学習データ", "AI","aa" ,"学習ゲーム", "日課表", "予定", "カレンダー"])
  
             with tab1:
     # 学習データ入力フォーム
@@ -242,7 +243,7 @@ def main():
                         st.write("教科が選択されていません。")
  
            
-            with tab4:
+            with tab5:
                 st.subheader("日課表")
  
                 # クラスをもとに日課表を取得
@@ -252,7 +253,7 @@ def main():
                     st.dataframe(timetable)
                 else:
                     st.warning("無効なクラス/学年が入力されました")
-            with tab3:
+            with tab4:
                 st.subheader("学習ゲーム")
                 st.text('素因数分解')
                 st.link_button("素因数分解", "https://sukepc0824.github.io/factorization/")
@@ -292,7 +293,7 @@ def main():
                 )
  
                
-            with tab5:
+            with tab6:
                 st.subheader("予定メモ")
  
                 project_name = st.text_input("予定を入力してください")
@@ -351,8 +352,45 @@ def main():
                         st.success(f"予定 '{project_to_delete}' が削除されました！")
                 else:
                     st.write("現在、予定はありません。予定があれば追加してください。")
- 
-            with tab6:
+            with tab3:
+                # データベースに接続
+                con = sqlite3.connect('chat.db')
+                cc = con.cursor()
+
+                # メッセージテーブルの作成
+                cc.execute('''CREATE TABLE IF NOT EXISTS messages
+                            (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+                con.commit()
+
+                # タイトル
+                st.title("オープンチャットアプリ")
+
+                # ページのリフレッシュを3秒ごとに設定
+                st_autorefresh(interval=3000)  # 3秒ごとにリフレッシュ
+
+                # ユーザーのメッセージ入力
+                user_msg = st.text_input("メッセージを入力してください")
+
+                # 送信ボタンを追加
+                if st.button("送信"):
+                    if user_msg:  # メッセージが空でない場合のみ送信
+                        cc.execute("INSERT INTO messages (user, message) VALUES (?, ?)", ('ユーザー', user_msg))
+                        con.commit()
+                        st.success("メッセージが送信されました！")
+
+                # メッセージの読み込み
+                cc.execute("SELECT user, message, timestamp FROM messages ORDER BY timestamp DESC")
+                messages = cc.fetchall()
+
+                # メッセージ表示
+                for user, message, timestamp in messages:
+                    st.write(f"{user} ({timestamp}): {message}")
+
+                # データベース接続を閉じる
+                con.close()
+                
+
+            with tab7:
                 st.subheader("カレンダー")
                 selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
                 event_description = st.text_input("イベントの説明を入力してください")
@@ -388,6 +426,7 @@ def main():
                     st.success("こんにちは、佐藤葉緒さん！")
                     if st.button("すべてのユーザーのデータを削除"):
                         delete_all_users(conn)
+                        delete_all_users(con)
                         st.success("すべてのユーザーのデータが削除されました。")
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
