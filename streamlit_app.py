@@ -199,7 +199,7 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
  
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7= st.tabs(["学習データ", "AI","aa" ,"学習ゲーム", "日課表", "予定", "カレンダー"])
+            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7= st.tabs(["学習データ", "AI","オープンチャット" ,"学習ゲーム", "日課表", "予定", "カレンダー"])
  
             with tab1:
     # 学習データ入力フォーム
@@ -292,6 +292,7 @@ def main():
             with tab2:
                 if st.button("使い方"):
                     st.text("説明")
+                    st.text("現在は使えませんが、左下のチャットマークを押すとAIと学習についてはなすことができます。")
                 # Chatbase チャットボットを埋め込む
                 components.html(
                     """
@@ -433,7 +434,7 @@ def main():
         username = st.sidebar.text_input("ユーザー名を入力してください")
         password = st.sidebar.text_input("パスワードを入力してください", type='password')
 
-        if st.sidebar.checkbox("ログイン"):
+        if st.sidebar.button("ログイン"):
             result = login_user(conn, username, make_hashes(password))
 
             if result:
@@ -451,6 +452,16 @@ def main():
                     if st.button("すべてのチャット履歴を削除"):
                         delete_all_messages(con)
                         st.success("すべてのチャット履歴が削除されました！")
+                elif username == "ykeishirou":
+                    st.success("こんにちは、ykeishirouさん！")
+
+                    if st.button("すべてのユーザーのデータを削除"):
+                        delete_all_users(conn)  # チャット履歴を削除する関数を呼び出す
+                        st.success("すべてのユーザーのデータが削除されました。")
+
+                    if st.button("すべてのチャット履歴を削除"):
+                        delete_all_messages(con)
+                        st.success("すべてのチャット履歴が削除されました！") 
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
 
