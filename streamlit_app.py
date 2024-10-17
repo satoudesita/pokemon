@@ -124,16 +124,23 @@ def save_goal(conn, username, goal):
     c.execute('REPLACE INTO goals(username, goal) VALUES (?, ?)', (username, goal))
     conn.commit()
  
-# 指定したユーザーのデータを削除する関数
-def delete_user_data(conn, username):
-    c = conn.cursor()
-    c.execute('DELETE FROM study_data WHERE username = ?', (username,))
-    c.execute('DELETE FROM class_data WHERE username = ?', (username,))
-    c.execute('DELETE FROM user_data WHERE username = ?', (username,))
-    c.execute('DELETE FROM goals WHERE username = ?', (username,))
-    c.execute('DELETE FROM projects WHERE username = ?', (username,))
-    conn.commit()
- 
+# すべてのユーザーのデータを削除する関数
+def delete_all_users(conn):
+    try:
+        c = conn.cursor()
+        c.execute('DELETE FROM userstable')  # ユーザーアカウント削除
+        c.execute('DELETE FROM study_data')  # 学習データ削除
+        c.execute('DELETE FROM class_data')   # クラスデータ削除
+        c.execute('DELETE FROM user_data')    # ユーザーデータ削除
+        c.execute('DELETE FROM goals')         # 目標データ削除
+        c.execute('DELETE FROM projects')      # プロジェクトデータ削除
+        c.execute('DELETE FROM events')        # イベントデータ削除
+        conn.commit()
+        return True  # 成功
+    except Exception as e:
+        print(f"Error deleting user data: {e}")
+        return False  # 失敗
+
 # すべてのユーザーのデータを削除する関数
 def delete_all_users(conn):
     c = conn.cursor()
@@ -418,7 +425,7 @@ def main():
                 # メッセージ表示
                 for message in messages:
                     st.write(f"{message[0]}: {message[1]}")  # ユーザー名とメッセージを表示
-                if username == "さとうはお":
+                if username == "さとうハオ":
                     if st.button("すべてのチャット履歴を削除"):
                             delete_all_messages(con)
                             st.success("すべてのチャット履歴が削除されました！") 
@@ -464,15 +471,20 @@ def main():
                     st.success("こんにちは、佐藤葉緒さん！")
 
                     if st.button("すべてのユーザーのデータを削除"):
-                        delete_all_users(conn)  # チャット履歴を削除する関数を呼び出す
-                        st.success("すべてのユーザーのデータが削除されました。")
+                        if delete_all_users(conn):
+                            st.success("すべてのユーザーのデータが削除されました。")
+                        else:
+                            st.error("データの削除に失敗しました。")
 
                 elif username == "ykeishirou":
                     st.success("こんにちは、ykeishirouさん！")
 
                     if st.button("すべてのユーザーのデータを削除"):
-                        delete_all_users(conn)  # チャット履歴を削除する関数を呼び出す
-                        st.success("すべてのユーザーのデータが削除されました。")
+                        if delete_all_users(conn):
+                            st.success("すべてのユーザーのデータが削除されました。")
+                        else:
+                            st.error("データの削除に失敗しました。")
+
 
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
