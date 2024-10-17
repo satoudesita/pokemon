@@ -202,7 +202,7 @@ def main():
             tab1, tab2, tab3, tab4, tab5, tab6 ,tab7= st.tabs(["学習データ", "AI","オープンチャット" ,"学習ゲーム", "日課表", "予定", "カレンダー"])
  
             with tab1:
-    # 学習データ入力フォーム
+                # 学習データ入力フォーム
                 with st.form(key='study_form'):
                     date = st.date_input('学習日', value=datetime.now())
                     study_hours = st.number_input('学習時間（時間）', min_value=0.0, step=0.5)
@@ -212,30 +212,29 @@ def main():
                     if submit_button:
                         save_study_data(conn, username, date, study_hours, score, subject)
                         st.success('学習データが保存されました！')
- 
+
                 # 学習データの表示
                 study_data = get_study_data(conn, username)
                 if study_data:
                     df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
                     if st.button("学習、スコアデータ表示"):
                         st.dataframe(df)
- 
-                   
+
                     # マルチセレクトで教科を選択
                     selected_subjects = st.multiselect('教科を選択してください', df['教科'].unique())
- 
-                 # グラフ表示
-                    gurafu = st.selectbox('グラフ', ['学習時間', 'スコア'])
- 
+
+                    # グラフ表示
+                    gurafu = st.selectbox('グラフ', ['学習時間', 'スコア', '合計勉強時間'])
+
                     # figを初期化
                     fig = go.Figure()
- 
+
                     if selected_subjects:
                         filtered_df = df[df['教科'].isin(selected_subjects)]
- 
+
                         for subject in selected_subjects:
                             subject_df = filtered_df[filtered_df['教科'] == subject]
-       
+
                             if gurafu == '学習時間':
                                 fig.add_trace(go.Scatter(
                                     x=subject_df['日付'],
@@ -245,7 +244,7 @@ def main():
                                 ))
                                 fig.update_layout(title='選択された教科の学習時間のグラフ',
                                                 xaxis_title='日付',
-                                                    yaxis_title='学習時間（時間）')
+                                                yaxis_title='学習時間（時間）')
                             elif gurafu == 'スコア':
                                 fig.add_trace(go.Scatter(
                                     x=subject_df['日付'],
@@ -256,11 +255,23 @@ def main():
                                 fig.update_layout(title='選択された教科のスコアのグラフ',
                                                 xaxis_title='日付',
                                                 yaxis_title='スコア')
- 
+                            elif gurafu == '合計勉強時間':
+                                total_hours = filtered_df.groupby('日付')['学習時間'].sum().reset_index()
+                                fig.add_trace(go.Scatter(
+                                    x=total_hours['日付'],
+                                    y=total_hours['学習時間'],
+                                    mode='lines+markers',
+                                    name='合計勉強時間'
+                                ))
+                                fig.update_layout(title='日付ごとの合計勉強時間の推移',
+                                                xaxis_title='日付',
+                                                yaxis_title='合計勉強時間（時間）')
+
                         st.plotly_chart(fig)
                     else:
                         st.write("教科が選択されていません。")
- 
+
+            
            
             with tab5:
                 st.subheader("日課表")
