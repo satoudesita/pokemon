@@ -508,7 +508,7 @@ def main():
                     st.error(f"アカウントの作成に失敗しました: {e}")
     
     if choice == "使い方":
-        st.text("d")
+        st.text("チームスに付属の使い方動画を見てください")
  
     # コネクションを閉じる
     conn.close()
