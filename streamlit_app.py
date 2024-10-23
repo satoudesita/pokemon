@@ -206,7 +206,7 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
  
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7= st.tabs(["学習データ", "AI","オープンチャット" ,"学習ゲーム", "日課表", "予定", "カレンダー"])
+            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7= st.tabs(["学習データ", "AI","オープンチャット" ,"学習ゲーム", "日課表", "to do リスト", "カレンダー"])
  
             with tab1:
                 # 学習データ入力フォーム
@@ -332,7 +332,7 @@ def main():
  
                
             with tab6:
-                st.subheader("予定メモ")
+                st.subheader("to do リスト")
  
                 project_name = st.text_input("予定を入力してください")
                 project_progress = st.number_input("進捗 (%)", min_value=0.0, max_value=100.0, step=1.0)
