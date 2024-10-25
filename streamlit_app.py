@@ -6,6 +6,19 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime
 import streamlit.components.v1 as components
+
+st.set_page_config(
+     page_title="study motivation App",
+     page_icon="📖",
+     layout="wide",
+     initial_sidebar_state="expanded",
+     menu_items={
+    'Get Help': 'https://www.extremelycoolapp.com/help',
+    'Report a bug': "https://www.extremelycoolapp.com/bug",
+    'About': "# This is a header. This is an *extremely* cool app!"
+}
+
+ )
  
 # パスワードをハッシュ化する関数
 def make_hashes(password):
