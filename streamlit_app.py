@@ -64,6 +64,16 @@ def save_event(conn, username, date, description):
     c.execute('INSERT INTO events(username, date, description) VALUES (?, ?, ?)',
               (username, date, description))
     conn.commit()
+
+def delete_all_users(conn, username):
+    c = conn.cursor()
+    c.execute('DELETE FROM study_data WHERE username = ?', (username,))
+    c.execute('DELETE FROM class_data WHERE username = ?', (username,))
+    c.execute('DELETE FROM user_data WHERE username = ?', (username,))
+    c.execute('DELETE FROM goals WHERE username = ?', (username,))
+    c.execute('DELETE FROM projects WHERE username = ?', (username,))
+    c.execute('DELETE FROM events WHERE username = ?', (username,))
+    conn.commit()
  
 # イベントデータを取得する関数
 def get_events(conn, username, date):
@@ -95,7 +105,7 @@ def check_user_exists(conn, username):
 def login_user(conn, username, password):
     c = conn.cursor()
     c.execute('SELECT * FROM userstable WHERE username = ? AND password = ?', (username, password))
-    return c.fetchall()
+    return c.fetchone()  # ユーザー情報を返す
  
 # 学習データを保存する関数
 def save_study_data(conn, username, date, study_hours, score, subject):
@@ -136,34 +146,9 @@ def save_goal(conn, username, goal):
     c = conn.cursor()
     c.execute('REPLACE INTO goals(username, goal) VALUES (?, ?)', (username, goal))
     conn.commit()
- 
-# すべてのユーザーのデータを削除する関数
-def delete_all_users(conn):
-    try:
-        c = conn.cursor()
-        c.execute('DELETE FROM userstable')  # ユーザーアカウント削除
-        c.execute('DELETE FROM study_data')  # 学習データ削除
-        c.execute('DELETE FROM class_data')   # クラスデータ削除
-        c.execute('DELETE FROM user_data')    # ユーザーデータ削除
-        c.execute('DELETE FROM goals')         # 目標データ削除
-        c.execute('DELETE FROM projects')      # プロジェクトデータ削除
-        c.execute('DELETE FROM events')        # イベントデータ削除
-        conn.commit()
-        return True  # 成功
-    except Exception as e:
-        print(f"Error deleting user data: {e}")
-        return False  # 失敗
 
-# すべてのユーザーのデータを削除する関数
-def delete_all_users(conn):
-    c = conn.cursor()
-    c.execute('DELETE FROM userstable')
-    c.execute('DELETE FROM study_data')
-    c.execute('DELETE FROM class_data')
-    c.execute('DELETE FROM user_data')
-    c.execute('DELETE FROM goals')
-    c.execute('DELETE FROM projects')
-    conn.commit()
+
+
  
 # プロジェクトを保存する関数
 def save_project(conn, username, project_name, project_progress):
@@ -467,36 +452,42 @@ def main():
                         st.write(f"- {event[0]}")
                 else:
                     st.write("この日にイベントはありません。")
-    elif choice == "ログイン":
+    if choice == "ログイン":
         st.subheader("ログイン画面です")
         username = st.sidebar.text_input("ユーザー名を入力してください")
         password = st.sidebar.text_input("パスワードを入力してください", type='password')
 
         if st.sidebar.button("ログイン"):
-            result = login_user(conn, username, make_hashes(password))
+            user_info = login_user(conn, username, make_hashes(password))
 
-            if result:
+            if user_info:
                 st.session_state['username'] = username
                 st.success("{}さんでログインしました".format(username))
                 st.success('ホーム画面に移動して下さい')
 
-                if username == "さとうはお":
-                    st.success("こんにちは、佐藤葉緒さん！")
+                # データ削除のオプション
+                
 
-                    if st.button("すべてのユーザーのデータを削除"):
-                        if delete_all_users(conn):
-                            st.success("すべてのユーザーのデータが削除されました。")
-                        else:
-                            st.error("データの削除に失敗しました。")
+            else:
+                st.warning("ユーザー名かパスワードが間違っています")
 
-                elif username == "ykeishirou":
-                    st.success("こんにちは、ykeishirouさん！")
+            if username == "さとうハオ":
+                st.success("こんにちは、佐藤葉緒さん！")
 
-                    if st.button("すべてのユーザーのデータを削除"):
-                        if delete_all_users(conn):
-                            st.success("すべてのユーザーのデータが削除されました。")
-                        else:
-                            st.error("データの削除に失敗しました。")
+                if st.button("すべてのユーザーのデータを削除"):
+                    if delete_all_users(conn):
+                        st.success("すべてのユーザーのデータが削除されました。")
+                    else:
+                        st.error("データの削除に失敗しました。")
+
+            elif username == "ykeishirou":
+                st.success("こんにちは、ykeishirouさん！")
+
+                if st.button("すべてのユーザーのデータを削除"):
+                    if delete_all_users(conn):
+                        st.success("すべてのユーザーのデータが削除されました。")
+                    else:
+                        st.error("データの削除に失敗しました。")
 
 
             else:
