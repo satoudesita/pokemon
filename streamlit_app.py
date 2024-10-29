@@ -499,7 +499,7 @@ def main():
 
                 # User-specific delete functionality
                 username = st.session_state.get('username')
-                if username in ["さとうハオ", "ykeishirou"]:
+                if username in ["サトウハオ", "ykeishirou"]:
                     if st.button("すべてのチャット履歴を削除"):
                         cc.execute("DELETE FROM messages")
                         con.commit()
