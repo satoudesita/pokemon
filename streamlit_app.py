@@ -667,11 +667,6 @@ def main():
             st.session_state["session_data"].to_csv("data/session_data.csv", index=False)
             st.success("セッションデータを保存しました！")
 
-        # 過去のセッションデータ表示
-        st.header("📊 学習履歴")
-        if os.path.exists("data/session_data.csv"):
-            session_data = pd.read_csv("data/session_data.csv")
-            st.line_chart(session_data.set_index("date")["focus_time"])
 
         st.write("ご利用ありがとうございます！集中して学習を続けましょう💪✨")
 
