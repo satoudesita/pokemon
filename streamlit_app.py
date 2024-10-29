@@ -8,7 +8,7 @@ from datetime import datetime
 import streamlit.components.v1 as components
 
 st.set_page_config(
-     page_title="study motivation App",
+     page_title="Study Motivation App",
      page_icon="📖",
      initial_sidebar_state="expanded",
      menu_items={
