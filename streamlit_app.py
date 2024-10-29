@@ -23,10 +23,21 @@ st.set_page_config(
 # パスワードをハッシュ化する関数
 def make_hashes(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
- 
+
+def delete_study_data(conn, username, date):
+    c = conn.cursor()
+    c.execute('DELETE FROM study_data WHERE username = ? AND date = ?', (username, date))
+    conn.commit()
+
 # ハッシュ化されたパスワードをチェックする関数
 def check_hashes(password, hashed_text):
     return make_hashes(password) == hashed_text
+
+# 学習データを削除する関数
+def delete_study_data(conn, username, date):
+    c = conn.cursor()
+    c.execute('DELETE FROM study_data WHERE username = ? AND date = ?', (username, date))
+    conn.commit()
 
 # チャット履歴を削除する関数
 def delete_all_messages(conn):
@@ -51,13 +62,13 @@ def create_user_table(conn):
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS userstable(username TEXT PRIMARY KEY, password TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS user_data(username TEXT PRIMARY KEY, text_content TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER, subject TEXT)')  # subject列を追加
+    c.execute('CREATE TABLE IF NOT EXISTS study_data(username TEXT, date TEXT, study_hours REAL, score INTEGER, subject TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS class_data(username TEXT PRIMARY KEY, class_grade TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS goals(username TEXT PRIMARY KEY, goal TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS projects(username TEXT, project_name TEXT, progress REAL)')
     c.execute('CREATE TABLE IF NOT EXISTS events(username TEXT, date TEXT, description TEXT)')
     conn.commit()
- 
+
 # イベントを保存する関数
 def save_event(conn, username, date, description):
     c = conn.cursor()
@@ -81,12 +92,13 @@ def get_events(conn, username, date):
     c.execute('SELECT description FROM events WHERE username = ? AND date = ?', (username, date))
     return c.fetchall()
  
- 
 # 新しいユーザーを追加する関数
 def add_user(conn, username, password):
+    hashed_password = make_hashes(password)
     c = conn.cursor()
-    c.execute('INSERT INTO userstable(username, password) VALUES (?, ?)', (username, password))
+    c.execute('INSERT INTO userstable(username, password) VALUES (?, ?)', (username, hashed_password))
     conn.commit()
+
  
 # クラスデータを追加または更新する関数
 def update_class_data(conn, username, class_grade):
@@ -104,8 +116,12 @@ def check_user_exists(conn, username):
 # ユーザーをログインさせる関数
 def login_user(conn, username, password):
     c = conn.cursor()
-    c.execute('SELECT * FROM userstable WHERE username = ? AND password = ?', (username, password))
-    return c.fetchone()  # ユーザー情報を返す
+    c.execute('SELECT * FROM userstable WHERE username = ?', (username,))
+    user = c.fetchone()
+    if user and check_hashes(password, user[1]):  # user[1] はハッシュ化されたパスワード
+        return user  # ユーザー情報を返す
+    return None
+
  
 # 学習データを保存する関数
 def save_study_data(conn, username, date, study_hours, score, subject):
@@ -204,81 +220,133 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
  
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7= st.tabs(["学習データ", "AI","オープンチャット" ,"学習ゲーム", "日課表", "to do リスト", "カレンダー"])
+            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7,tab8= st.tabs(["学習データ","スコアデータ", "AI","オープンチャット" ,"学習ゲーム", "日課表", "to do リスト", "カレンダー"])
  
             with tab1:
-                # 学習データ入力フォーム
-                with st.form(key='study_form'):
-                    date = st.date_input('学習日', value=datetime.now())
-                    study_hours = st.number_input('学習時間（時間）', min_value=0.0, step=0.5)
-                    score = st.number_input('テストのスコア', min_value=0, max_value=100, step=1)
-                    subject = st.selectbox('教科', ['数学', '英語', '理科', '社会', '国語'])
-                    submit_button = st.form_submit_button(label='学習データを保存')
-                    if submit_button:
-                        save_study_data(conn, username, date, study_hours, score, subject)
-                        st.success('学習データが保存されました！')
+                    st.subheader("学習データの入力")
+                    with st.form(key='study_form'):
+                        date = st.date_input('学習日', value=datetime.now(), key='study_date_input')
+                        study_hours = st.number_input('学習時間（時間）', min_value=0.0, step=0.5)
+                        subject = st.selectbox('教科', ['数学', '英語', '理科', '社会', '国語'])
+                        submit_button = st.form_submit_button(label='学習データを保存')
+                        if submit_button:
+                            save_study_data(conn, username, date.strftime('%Y-%m-%d'), study_hours, 0, subject)  # スコアは0で保存
+                            st.success('学習データが保存されました！')
 
-                # 学習データの表示
-                study_data = get_study_data(conn, username)
-                if study_data:
-                    df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
-                    if st.button("学習、スコアデータ表示"):
-                        st.dataframe(df)
+                    # 学習データの表示
+                    study_data = get_study_data(conn, username)
+                    if study_data:
+                        df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
+                        if st.button("学習データ表示"):
+                            st.dataframe(df)
 
-                    # マルチセレクトで教科を選択
-                    selected_subjects = st.multiselect('教科を選択してください', df['教科'].unique())
+                        # マルチセレクトで教科を選択
+                        selected_subjects = st.multiselect('教科を選択してください', df['教科'].unique(), key='subject_multiselect')
 
-                    # グラフ表示
-                    gurafu = st.selectbox('グラフ', ['学習時間', 'スコア', '合計勉強時間'])
+                        # グラフ表示
+                        gurafu = st.selectbox('グラフ', ['学習時間', '合計勉強時間'])
 
-                    # figを初期化
-                    fig = go.Figure()
+                        # figを初期化
+                        fig = go.Figure()
 
-                    if selected_subjects:
-                        filtered_df = df[df['教科'].isin(selected_subjects)]
+                        if selected_subjects:
+                            filtered_df = df[df['教科'].isin(selected_subjects)]
 
-                        for subject in selected_subjects:
-                            subject_df = filtered_df[filtered_df['教科'] == subject]
+                            for subject in selected_subjects:
+                                subject_df = filtered_df[filtered_df['教科'] == subject]
 
-                            if gurafu == '学習時間':
-                                fig.add_trace(go.Scatter(
-                                    x=subject_df['日付'],
-                                    y=subject_df['学習時間'],
-                                    mode='lines+markers',
-                                    name=subject  # 教科名を表示
-                                ))
-                                fig.update_layout(title='選択された教科の学習時間のグラフ',
-                                                xaxis_title='日付',
-                                                yaxis_title='学習時間（時間）')
-                            elif gurafu == 'スコア':
-                                fig.add_trace(go.Scatter(
-                                    x=subject_df['日付'],
-                                    y=subject_df['スコア'],
-                                    mode='lines+markers',
-                                    name=subject  # 教科名を表示
-                                ))
-                                fig.update_layout(title='選択された教科のスコアのグラフ',
-                                                xaxis_title='日付',
-                                                yaxis_title='スコア')
-                            elif gurafu == '合計勉強時間':
-                                total_hours = filtered_df.groupby('日付')['学習時間'].sum().reset_index()
-                                fig.add_trace(go.Scatter(
-                                    x=total_hours['日付'],
-                                    y=total_hours['学習時間'],
-                                    mode='lines+markers',
-                                    name='合計勉強時間'
-                                ))
-                                fig.update_layout(title='日付ごとの合計勉強時間の推移',
-                                                xaxis_title='日付',
-                                                yaxis_title='合計勉強時間（時間）')
+                                if gurafu == '学習時間':
+                                    fig.add_trace(go.Scatter(
+                                        x=subject_df['日付'],
+                                        y=subject_df['学習時間'],
+                                        mode='lines+markers',
+                                        name=subject
+                                    ))
+                                    fig.update_layout(title='選択された教科の学習時間のグラフ',
+                                                    xaxis_title='日付',
+                                                    yaxis_title='学習時間（時間）')
+                                elif gurafu == '合計勉強時間':
+                                    total_hours = filtered_df.groupby('日付')['学習時間'].sum().reset_index()
+                                    fig.add_trace(go.Scatter(
+                                        x=total_hours['日付'],
+                                        y=total_hours['学習時間'],
+                                        mode='lines+markers',
+                                        name='合計勉強時間'
+                                    ))
+                                    fig.update_layout(title='日付ごとの合計勉強時間の推移',
+                                                    xaxis_title='日付',
+                                                    yaxis_title='合計勉強時間（時間）')
 
-                        st.plotly_chart(fig)
-                    else:
-                        st.write("教科が選択されていません。")
+                            st.plotly_chart(fig)
+                        else:
+                            st.write("教科が選択されていません。")
 
-            
+                        # 学習データ削除フォーム
+                        st.subheader("学習データを削除")
+                        delete_date = st.date_input('削除したい学習日を選択してください', value=datetime.now(), key='delete_date_input')
+                        
+                        if st.button("学習データを削除"):
+                            delete_study_data(conn, username, delete_date.strftime('%Y-%m-%d'))
+                            st.success(f"{delete_date.strftime('%Y-%m-%d')} の学習データが削除されました！")
+
+            with tab2:
+                    st.subheader("スコアデータの入力")
+                    with st.form(key='score_form'):
+                        date = st.date_input('学習日', value=datetime.now(), key='score_date_input')
+                        score = st.number_input('テストのスコア', min_value=0, max_value=100, step=1)
+                        subject = st.selectbox('教科', ['数学', '英語', '理科', '社会', '国語'])
+                        submit_button = st.form_submit_button(label='スコアデータを保存')
+                        if submit_button:
+                            save_study_data(conn, username, date.strftime('%Y-%m-%d'), 0, score, subject)  # 学習時間は0で保存
+                            st.success('スコアデータが保存されました！')
+
+                    # スコアデータの表示
+                    study_data = get_study_data(conn, username)
+                    if study_data:
+                        df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
+                        if st.button("スコアデータ表示"):
+                            st.dataframe(df)
+
+                        # マルチセレクトで教科を選択
+                        selected_subjects = st.multiselect('教科を選択してください', df['教科'].unique(), key='score_subject_multiselect')
+
+                        # グラフ表示
+                        gurafu = st.selectbox('グラフ', ['スコア'], key='score_graph_selectbox')
+
+                        # figを初期化
+                        fig = go.Figure()
+
+                        if selected_subjects:
+                            filtered_df = df[df['教科'].isin(selected_subjects)]
+
+                            for subject in selected_subjects:
+                                subject_df = filtered_df[filtered_df['教科'] == subject]
+
+                                if gurafu == 'スコア':
+                                    fig.add_trace(go.Scatter(
+                                        x=subject_df['日付'],
+                                        y=subject_df['スコア'],
+                                        mode='lines+markers',
+                                        name=subject
+                                    ))
+                                    fig.update_layout(title='選択された教科のスコアのグラフ',
+                                                    xaxis_title='日付',
+                                                    yaxis_title='スコア')
+
+                            st.plotly_chart(fig)
+                        else:
+                            st.write("教科が選択されていません。")
+
+                        # 学習データ削除フォーム
+                        st.subheader("学習データを削除")
+                        delete_date = st.date_input('削除したい学習日を選択してください', value=datetime.now(), key='delete_score_date_input')
+                        
+                        if st.button("スコアデータを削除"):
+                            delete_study_data(conn, username, delete_date.strftime('%Y-%m-%d'))
+                            st.success(f"{delete_date.strftime('%Y-%m-%d')} のスコアデータが削除されました！")
+
            
-            with tab5:
+            with tab6:
                 st.subheader("日課表")
  
                 # クラスをもとに日課表を取得
@@ -288,7 +356,7 @@ def main():
                     st.dataframe(timetable)
                 else:
                     st.warning("無効なクラス/学年が入力されました")
-            with tab4:
+            with tab5:
                 st.subheader("学習ゲーム")
                 st.text('素因数分解')
                 st.link_button("素因数分解", "https://sukepc0824.github.io/factorization/")
@@ -305,7 +373,7 @@ def main():
                 st.text('生物')
                 st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
                
-            with tab2:
+            with tab3:
                 if st.button("使い方"):
                     st.text("説明")
                     st.text("現在は使えませんが、左下のチャットマークを押すとAIと学習についてはなすことができます")
@@ -329,7 +397,7 @@ def main():
                 )
  
                
-            with tab6:
+            with tab7:
                 st.subheader("to do リスト")
  
                 project_name = st.text_input("予定を入力してください")
@@ -388,7 +456,7 @@ def main():
                         st.success(f"予定 '{project_to_delete}' が削除されました！")
                 else:
                     st.write("現在、予定はありません。予定があれば追加してください。")
-            with tab3:  # Chat Tab
+            with tab4:  # Chat Tab
                 # データベースに接続
                 con = sqlite3.connect('chat.db')
                 cc = con.cursor()
@@ -434,7 +502,7 @@ def main():
 
 
 
-            with tab7:
+            with tab8:
                 st.subheader("カレンダー")
                 selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
                 event_description = st.text_input("イベントの説明を入力してください")
