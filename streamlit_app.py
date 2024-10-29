@@ -469,46 +469,41 @@ def main():
                 con = sqlite3.connect('chat.db')
                 cc = con.cursor()
 
-                # メッセージテーブルの作成
+                # Create messages table if it doesn't exist
                 cc.execute('''CREATE TABLE IF NOT EXISTS messages
-                            (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+                                (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
                 con.commit()
 
-                # タイトル
+                # Title
                 st.title("オープンチャットアプリ")
 
-                # ページのリフレッシュを3秒ごとに設定
-                st_autorefresh(interval=3000)  # 3秒ごとにリフレッシュ
+                # Refresh the page every 3 seconds
+                st_autorefresh(interval=3000)  # Refresh every 3 seconds
 
-                # ユーザーのメッセージ入力
-                user_msg = st.text_input("メッセージを入力してください")
+                # User input using chat_input
+                user_msg = st.chat_input("メッセージを入力してください")
+                if user_msg and 'username' in st.session_state:  # Check if the username exists
+                    cc.execute("INSERT INTO messages (user, message) VALUES (?, ?)", (st.session_state['username'], user_msg))
+                    con.commit()
+                    st.success("メッセージが送信されました！")
+                elif user_msg:  # If user_msg is empty
+                    st.warning("メッセージが空です。")
 
-                # 送信ボタンを追加
-                if st.button("送信"):
-                    if user_msg and 'username' in st.session_state:  # ユーザー名が存在するか確認
-                        cc.execute("INSERT INTO messages (user, message) VALUES (?, ?)", (st.session_state['username'], user_msg))
-                        con.commit()
-                        st.success("メッセージが送信されました！")
-                    else:
-                        st.warning("メッセージが空です。")
-
-                # メッセージの読み込み
+                # Load messages
                 cc.execute("SELECT user, message FROM messages ORDER BY timestamp DESC")
                 messages = cc.fetchall()
 
-                # メッセージ表示
+                # Display messages
                 for message in messages:
-                    st.write(f"{message[0]}: {message[1]}")  # ユーザー名とメッセージを表示
-                if username == "さとうハオ":
-                    if st.button("すべてのチャット履歴を削除"):
-                            delete_all_messages(con)
-                            st.success("すべてのチャット履歴が削除されました！") 
-                elif username == "ykeishirou":
-                    if st.button("すべてのチャット履歴を削除"):
-                            delete_all_messages(con)
-                            st.success("すべてのチャット履歴が削除されました！") 
+                    st.write(f"{message[0]}: {message[1]}")  # Display username and message
 
-
+                # User-specific delete functionality
+                username = st.session_state.get('username')
+                if username in ["さとうハオ", "ykeishirou"]:
+                    if st.button("すべてのチャット履歴を削除"):
+                        cc.execute("DELETE FROM messages")
+                        con.commit()
+                        st.success("すべてのチャット履歴が削除されました！")
 
             with tab8:
                 st.subheader("カレンダー")
