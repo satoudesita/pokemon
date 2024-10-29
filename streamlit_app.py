@@ -358,21 +358,30 @@ def main():
                     st.warning("無効なクラス/学年が入力されました")
             with tab5:
                 st.subheader("学習ゲーム")
-                st.text('素因数分解')
-                st.link_button("素因数分解", "https://sukepc0824.github.io/factorization/")
-                st.text('マスmatics')
-                st.link_button("マスmatics", "https://sukepc0824.github.io/masu-matics/")
-                st.text('英単語')
-                st.link_button("英単語", "https://gatieitanngo-jjmvn8dyjndf9ow9hunxfj.streamlit.app/")
-                st.text('歴史')
-                st.link_button("歴史", "https://satoudesta31080-cjwty9bid5qndqsqogzjbq.streamlit.app/")
-                st.text('四字熟語')
-                st.link_button("四字熟語", "https://iqkxbsojo8sg5sddsolvqp.streamlit.app/")
-                st.text('地理')
-                st.link_button("地理", "https://xquamsmdle8xatfl7df6my.streamlit.app/")
-                st.text('生物')
-                st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
-               
+
+                # 列を作成
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.text('素因数分解')
+                    st.link_button("素因数分解", "https://sukepc0824.github.io/factorization/")
+                    st.text('マスmatics')
+                    st.link_button("マスmatics", "https://sukepc0824.github.io/masu-matics/")
+                    st.text('英単語')
+                    st.link_button("英単語", "https://gatieitanngo-jjmvn8dyjndf9ow9hunxfj.streamlit.app/")
+
+                with col2:
+                    st.text('歴史')
+                    st.link_button("歴史", "https://satoudesta31080-cjwty9bid5qndqsqogzjbq.streamlit.app/")
+                    st.text('四字熟語')
+                    st.link_button("四字熟語", "https://iqkxbsojo8sg5sddsolvqp.streamlit.app/")
+                    st.text('地理')
+                    st.link_button("地理", "https://xquamsmdle8xatfl7df6my.streamlit.app/")
+
+                with col3:
+                    st.text('生物')
+                    st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
+
             with tab3:
                 if st.button("使い方"):
                     st.text("説明")
