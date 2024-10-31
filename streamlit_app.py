@@ -196,7 +196,6 @@ def delete_project(conn, username, project_name):
     conn.commit()
  
 def main():
-    st.title("モチベーション向上")
    
     menu = ["ホーム", "ログイン", "サインアップ","使い方","タイマー"]
     choice = st.sidebar.selectbox("メニュー", menu)
@@ -206,8 +205,8 @@ def main():
     create_user_table(conn)
  
     if choice == "ホーム":
-        st.subheader("ホーム画面")
-        st.subheader("左上の矢印を押してください")
+        image_path = "Top.png"
+        st.image(image_path, use_column_width=True)
         if 'username' in st.session_state:
             username = st.session_state['username']
             st.write(f"ようこそ、{username}さん！")
