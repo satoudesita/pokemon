@@ -205,8 +205,10 @@ def main():
     create_user_table(conn)
  
     if choice == "ホーム":
+
         image_path = "Top.png"
-        st.image(image_path, use_column_width=True)
+        st.image(image_path)
+
         if 'username' in st.session_state:
             username = st.session_state['username']
             st.write(f"ようこそ、{username}さん！")
