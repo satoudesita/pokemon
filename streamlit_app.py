@@ -205,9 +205,25 @@ def main():
     create_user_table(conn)
  
     if choice == "ホーム":
-
+        
         image_path = "Top.png"
-        st.image(image_path)
+        css = """
+        <style>
+            .image-container {
+                text-align: center;  /* 中央揃え */
+            }
+            .custom-image {
+                width: 80%;  /* 幅を50%に設定 */
+                border-radius: 10px;  /* 角を丸くする */
+            }
+        </style>
+        """
+
+        # CSSを適用
+        st.markdown(css, unsafe_allow_html=True)
+
+        # 画像を表示
+        st.markdown('<div class="image-container"><img class="custom-image" src="Top.png" alt="ロゴ画像"></div>', unsafe_allow_html=True)
 
         if 'username' in st.session_state:
             username = st.session_state['username']
