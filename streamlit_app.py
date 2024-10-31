@@ -14,7 +14,7 @@ import streamlit as st
 # ページ設定
 st.set_page_config(
     page_title="study app",
-    page_icon="ロゴ画像その２.png"  
+    page_icon="ロゴ画像その２.png",  
     initial_sidebar_state="expanded",
     menu_items={
     'Get Help': 'https://www.extremelycoolapp.com/help',
