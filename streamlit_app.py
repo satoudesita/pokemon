@@ -205,25 +205,26 @@ def main():
     create_user_table(conn)
  
     if choice == "ホーム":
-        
-        image_path = "img/Top.png"
-        css = """
-        <style>
-            .image-container {
-                text-align: center;  /* 中央揃え */
-            }
-            .custom-image {
-                width: 50%;  /* 幅を50%に設定 */
-                border-radius: 10px;  /* 角を丸くする */
-            }
-        </style>
-        """
 
-        # CSSを適用
-        st.markdown(css, unsafe_allow_html=True)
+        background_image = "Top.png"  # PNGのURLを指定
 
-        # 画像を表示
-        st.markdown('<div class="image-container"><img class="custom-image" src="{image_path}"alt="ロゴ画像"></div>', unsafe_allow_html=True)
+        # CSSを使って背景画像を設定
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-image: url("{background_image}");
+                background-size: cover;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-position: center;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+
 
         if 'username' in st.session_state:
             username = st.session_state['username']
