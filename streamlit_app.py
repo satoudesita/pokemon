@@ -205,24 +205,24 @@ def main():
     create_user_table(conn)
  
     if choice == "ホーム":
-
-        background_image = "Top.png"  # PNGのURLを指定
+                # 背景画像のファイルパス
+        image_path = "Top.png"
 
         # CSSを使って背景画像を設定
         st.markdown(
             f"""
             <style>
             .stApp {{
-                background-image: url("{background_image}");
+                background-image: url({image_path});
                 background-size: cover;
-                background-repeat: no-repeat;
-                background-attachment: fixed;
                 background-position: center;
+                background-repeat: no-repeat;
             }}
             </style>
             """,
             unsafe_allow_html=True
         )
+
 
 
 
