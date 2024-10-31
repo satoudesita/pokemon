@@ -206,7 +206,7 @@ def main():
  
     if choice == "ホーム":
         
-        image_path = "ロゴ画像その２"
+        image_path = "Top.png"
         css = """
         <style>
             .image-container {
@@ -223,7 +223,7 @@ def main():
         st.markdown(css, unsafe_allow_html=True)
 
         # 画像を表示
-        st.markdown('<div class="image-container"><img class="custom-image" src="ロゴ画像その２.png" alt="ロゴ画像"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="image-container"><img class="custom-image" src="{image_path}"alt="ロゴ画像"></div>', unsafe_allow_html=True)
 
         if 'username' in st.session_state:
             username = st.session_state['username']
