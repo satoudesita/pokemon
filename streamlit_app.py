@@ -206,7 +206,7 @@ def main():
  
     if choice == "ホーム":
         
-        image_path = "Top.png"
+        image_path = "img/Top.png"
         css = """
         <style>
             .image-container {
