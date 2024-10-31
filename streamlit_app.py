@@ -9,17 +9,19 @@ import streamlit.components.v1 as components
 import os
 import time
 
+import streamlit as st
+
+# ページ設定
 st.set_page_config(
-     page_title="Study Motivation Up!!!⇪",
-     page_icon="📖",
-     initial_sidebar_state="expanded",
-     menu_items={
+    page_title="study app",
+    page_icon="ロゴ画像その２.png"  # ここにPNGファイルのパスを指定
+    initial_sidebar_state="expanded",
+    menu_items={
     'Get Help': 'https://www.extremelycoolapp.com/help',
     'Report a bug': "https://www.extremelycoolapp.com/bug",
     'About': "# This is a header. This is an *extremely* cool app!"
 }
-
- )
+)
  
 # パスワードをハッシュ化する関数
 def make_hashes(password):
