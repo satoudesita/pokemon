@@ -206,14 +206,14 @@ def main():
  
     if choice == "ホーム":
         
-        image_path = "Top.png"
+        image_path = "ロゴ画像その２"
         css = """
         <style>
             .image-container {
                 text-align: center;  /* 中央揃え */
             }
             .custom-image {
-                width: 80%;  /* 幅を50%に設定 */
+                width: 50%;  /* 幅を50%に設定 */
                 border-radius: 10px;  /* 角を丸くする */
             }
         </style>
@@ -223,7 +223,7 @@ def main():
         st.markdown(css, unsafe_allow_html=True)
 
         # 画像を表示
-        st.markdown('<div class="image-container"><img class="custom-image" src="Top.png" alt="ロゴ画像"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="image-container"><img class="custom-image" src="ロゴ画像その２.png" alt="ロゴ画像"></div>', unsafe_allow_html=True)
 
         if 'username' in st.session_state:
             username = st.session_state['username']
