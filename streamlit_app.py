@@ -198,7 +198,7 @@ def delete_project(conn, username, project_name):
 def main():
    
     menu = ["ホーム", "ログイン", "サインアップ","使い方","タイマー"]
-    choice = st.sidebar.selectbox("メニュー", menu)
+    choice = st.sidebar.selectbox("メニュ", menu)
  
     # データベースに接続
     conn = sqlite3.connect('database.db')
