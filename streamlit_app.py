@@ -8,9 +8,9 @@ from datetime import datetime
 import streamlit.components.v1 as components
 import os
 import time
-
+ 
 import streamlit as st
-
+ 
 # ページ設定
 st.set_page_config(
     page_title="study app",
@@ -26,28 +26,28 @@ st.set_page_config(
 # パスワードをハッシュ化する関数
 def make_hashes(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
-
+ 
 def delete_study_data(conn, username, date):
     c = conn.cursor()
     c.execute('DELETE FROM study_data WHERE username = ? AND date = ?', (username, date))
     conn.commit()
-
+ 
 # ハッシュ化されたパスワードをチェックする関数
 def check_hashes(password, hashed_text):
     return make_hashes(password) == hashed_text
-
+ 
 # 学習データを削除する関数
 def delete_study_data(conn, username, date):
     c = conn.cursor()
     c.execute('DELETE FROM study_data WHERE username = ? AND date = ?', (username, date))
     conn.commit()
-
+ 
 # チャット履歴を削除する関数
 def delete_all_messages(conn):
     c = conn.cursor()
     c.execute('DELETE FROM messages')
     conn.commit()
-
+ 
 def create_tables(con):
     cc = con.cursor()
     cc.execute('''
@@ -71,14 +71,14 @@ def create_user_table(conn):
     c.execute('CREATE TABLE IF NOT EXISTS projects(username TEXT, project_name TEXT, progress REAL)')
     c.execute('CREATE TABLE IF NOT EXISTS events(username TEXT, date TEXT, description TEXT)')
     conn.commit()
-
+ 
 # イベントを保存する関数
 def save_event(conn, username, date, description):
     c = conn.cursor()
     c.execute('INSERT INTO events(username, date, description) VALUES (?, ?, ?)',
               (username, date, description))
     conn.commit()
-
+ 
 def delete_all_users(conn, username):
     c = conn.cursor()
     c.execute('DELETE FROM study_data WHERE username = ?', (username,))
@@ -101,7 +101,7 @@ def add_user(conn, username, password):
     c = conn.cursor()
     c.execute('INSERT INTO userstable(username, password) VALUES (?, ?)', (username, hashed_password))
     conn.commit()
-
+ 
  
 # クラスデータを追加または更新する関数
 def update_class_data(conn, username, class_grade):
@@ -124,7 +124,7 @@ def login_user(conn, username, password):
     if user and check_hashes(password, user[1]):  # user[1] はハッシュ化されたパスワード
         return user  # ユーザー情報を返す
     return None
-
+ 
  
 # 学習データを保存する関数
 def save_study_data(conn, username, date, study_hours, score, subject):
@@ -154,9 +154,9 @@ def load_timetable(sheet_number):
 # クラスに基づいてシート番号を決定する関数
 def get_sheet_number(class_grade):
     sheet_mapping = {
-        "1.1": 0, "1.2": 1, "1.3": 2, "1.4": 3, "1.5": 4,"1.6": 5, "1.7": 6, "1.8": 7,
-        "2.1": 8, "2.2": 9,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 10, "2.4": 11, "2.5": 12, "2.6": 13, "2.7": 14,"2.3": 15, "2.8": 16,
-        "3.1": 17, "3.2": 18, "3.3": 19, "3.4": 20, "3.5": 21,"3.6": 22, "3.7": 23,"3.8": 24, "3.9": 25,
+        "1-1": 0, "1-2": 1, "1-3": 2, "1-4": 3, "1-5": 4,"1-6": 5, "1-7": 6, "1-8": 7,
+        "2-1": 8, "2-2": 9,"2-3": 10, "2-4": 11, "2-5": 12, "2-6": 13, "2-7": 14,"2-8": 10, "3-1": 11, "3-2": 12, "3-3": 13, "3-4": 14,"3-5": 15, "3-6": 16,
+        "3-7": 17, "3-8": 18, "3-9": 19, 
     }
     return sheet_mapping.get(class_grade, -1)  # -1 は無効なクラスを示す
  
@@ -165,9 +165,9 @@ def save_goal(conn, username, goal):
     c = conn.cursor()
     c.execute('REPLACE INTO goals(username, goal) VALUES (?, ?)', (username, goal))
     conn.commit()
-
-
-
+ 
+ 
+ 
  
 # プロジェクトを保存する関数
 def save_project(conn, username, project_name, project_progress):
@@ -207,7 +207,7 @@ def main():
     if choice == "ホーム":
                 # 背景画像のファイルパス
         image_path = "Top.png"
-
+ 
         # CSSを使って背景画像を設定
         st.markdown(
             f"""
@@ -223,15 +223,15 @@ def main():
             unsafe_allow_html=True
         )
         st.text("ホーム画面")
-
-
-
+ 
+ 
+ 
         if 'username' in st.session_state:
             username = st.session_state['username']
             st.write(f"ようこそ、{username}さん！")
  
             class_grade = get_class_data(conn, username)
-            class_grade_input = st.sidebar.text_input("クラス/学年を入力してください（例１年１組→1.1）", value=class_grade)
+            class_grade_input = st.sidebar.text_input("クラス/学年を入力してください（例１年１組→1-1）", value=class_grade)
  
             if st.sidebar.button("クラス/学年を変更"):
                 if class_grade_input:
@@ -253,29 +253,29 @@ def main():
                         if submit_button:
                             save_study_data(conn, username, date.strftime('%Y-%m-%d'), study_hours, 0, subject)  # スコアは0で保存
                             st.success('学習データが保存されました！')
-
+ 
                     # 学習データの表示
                     study_data = get_study_data(conn, username)
                     if study_data:
                         df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
                         if st.button("学習データ表示"):
                             st.dataframe(df)
-
+ 
                         # マルチセレクトで教科を選択
                         selected_subjects = st.multiselect('教科を選択してください', df['教科'].unique(), key='subject_multiselect')
-
+ 
                         # グラフ表示
                         gurafu = st.selectbox('グラフ', ['学習時間', '合計勉強時間'])
-
+ 
                         # figを初期化
                         fig = go.Figure()
-
+ 
                         if selected_subjects:
                             filtered_df = df[df['教科'].isin(selected_subjects)]
-
+ 
                             for subject in selected_subjects:
                                 subject_df = filtered_df[filtered_df['教科'] == subject]
-
+ 
                                 if gurafu == '学習時間':
                                     fig.add_trace(go.Scatter(
                                         x=subject_df['日付'],
@@ -297,19 +297,19 @@ def main():
                                     fig.update_layout(title='日付ごとの合計勉強時間の推移',
                                                     xaxis_title='日付',
                                                     yaxis_title='合計勉強時間（時間）')
-
+ 
                             st.plotly_chart(fig)
                         else:
                             st.write("教科が選択されていません。")
-
+ 
                         # 学習データ削除フォーム
                         st.subheader("学習データを削除")
                         delete_date = st.date_input('削除したい学習日を選択してください', value=datetime.now(), key='delete_date_input')
-                        
+                       
                         if st.button("学習データを削除"):
                             delete_study_data(conn, username, delete_date.strftime('%Y-%m-%d'))
                             st.success(f"{delete_date.strftime('%Y-%m-%d')} の学習データが削除されました！")
-
+ 
             with tab2:
                     st.subheader("スコアデータの入力")
                     with st.form(key='score_form'):
@@ -320,29 +320,29 @@ def main():
                         if submit_button:
                             save_study_data(conn, username, date.strftime('%Y-%m-%d'), 0, score, subject)  # 学習時間は0で保存
                             st.success('スコアデータが保存されました！')
-
+ 
                     # スコアデータの表示
                     study_data = get_study_data(conn, username)
                     if study_data:
                         df = pd.DataFrame(study_data, columns=['日付', '学習時間', 'スコア', '教科'])
                         if st.button("スコアデータ表示"):
                             st.dataframe(df)
-
+ 
                         # マルチセレクトで教科を選択
                         selected_subjects = st.multiselect('教科を選択してください', df['教科'].unique(), key='score_subject_multiselect')
-
+ 
                         # グラフ表示
                         gurafu = st.selectbox('グラフ', ['スコア'], key='score_graph_selectbox')
-
+ 
                         # figを初期化
                         fig = go.Figure()
-
+ 
                         if selected_subjects:
                             filtered_df = df[df['教科'].isin(selected_subjects)]
-
+ 
                             for subject in selected_subjects:
                                 subject_df = filtered_df[filtered_df['教科'] == subject]
-
+ 
                                 if gurafu == 'スコア':
                                     fig.add_trace(go.Scatter(
                                         x=subject_df['日付'],
@@ -353,19 +353,19 @@ def main():
                                     fig.update_layout(title='選択された教科のスコアのグラフ',
                                                     xaxis_title='日付',
                                                     yaxis_title='スコア')
-
+ 
                             st.plotly_chart(fig)
                         else:
                             st.write("教科が選択されていません。")
-
+ 
                         # 学習データ削除フォーム
                         st.subheader("学習データを削除")
                         delete_date = st.date_input('削除したい学習日を選択してください', value=datetime.now(), key='delete_score_date_input')
-                        
+                       
                         if st.button("スコアデータを削除"):
                             delete_study_data(conn, username, delete_date.strftime('%Y-%m-%d'))
                             st.success(f"{delete_date.strftime('%Y-%m-%d')} のスコアデータが削除されました！")
-
+ 
            
             with tab6:
                 st.subheader("日課表")
@@ -379,10 +379,10 @@ def main():
                     st.warning("無効なクラス/学年が入力されました")
             with tab5:
                 st.subheader("学習ゲーム")
-
+ 
                 # 列を作成
                 col1, col2, col3 = st.columns(3)
-
+ 
                 with col1:
                     st.text('素因数分解')
                     st.link_button("素因数分解", "https://sukepc0824.github.io/factorization/")
@@ -390,7 +390,7 @@ def main():
                     st.link_button("マスmatics", "https://sukepc0824.github.io/masu-matics/")
                     st.text('英単語')
                     st.link_button("英単語", "https://gatieitanngo-jjmvn8dyjndf9ow9hunxfj.streamlit.app/")
-
+ 
                 with col2:
                     st.text('歴史')
                     st.link_button("歴史", "https://satoudesta31080-cjwty9bid5qndqsqogzjbq.streamlit.app/")
@@ -398,11 +398,11 @@ def main():
                     st.link_button("四字熟語", "https://iqkxbsojo8sg5sddsolvqp.streamlit.app/")
                     st.text('地理')
                     st.link_button("地理", "https://xquamsmdle8xatfl7df6my.streamlit.app/")
-
+ 
                 with col3:
                     st.text('生物')
                     st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
-
+ 
             with tab3:
                 if st.button("使い方"):
                     st.text("説明")
@@ -490,18 +490,18 @@ def main():
                 # データベースに接続
                 con = sqlite3.connect('chat.db')
                 cc = con.cursor()
-
+ 
                 # Create messages table if it doesn't exist
                 cc.execute('''CREATE TABLE IF NOT EXISTS messages
                                 (id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, message TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
                 con.commit()
-
+ 
                 # Title
                 st.title("オープンチャットアプリ")
-
+ 
                 # Refresh the page every 3 seconds
                 st_autorefresh(interval=3000)  # Refresh every 3 seconds
-
+ 
                 # User input using chat_input
                 user_msg = st.chat_input("メッセージを入力してください")
                 if user_msg and 'username' in st.session_state:  # Check if the username exists
@@ -510,15 +510,15 @@ def main():
                     st.success("メッセージが送信されました！")
                 elif user_msg:  # If user_msg is empty
                     st.warning("メッセージが空です。")
-
+ 
                 # Load messages
                 cc.execute("SELECT user, message FROM messages ORDER BY timestamp DESC")
                 messages = cc.fetchall()
-
+ 
                 # Display messages
                 for message in messages:
                     st.write(f"{message[0]}: {message[1]}")  # Display username and message
-
+ 
                 # User-specific delete functionality
                 username = st.session_state.get('username')
                 if username in ["サトウハオ", "ykeishirou"]:
@@ -526,7 +526,7 @@ def main():
                         cc.execute("DELETE FROM messages")
                         con.commit()
                         st.success("すべてのチャット履歴が削除されました！")
-
+ 
             with tab8:
                 st.subheader("カレンダー")
                 selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
@@ -549,43 +549,43 @@ def main():
         st.subheader("ログイン画面です")
         username = st.sidebar.text_input("ユーザー名を入力してください")
         password = st.sidebar.text_input("パスワードを入力してください", type='password')
-
+ 
         if st.sidebar.button("ログイン"):
             user_info = login_user(conn, username, make_hashes(password))
-
+ 
             if user_info:
                 st.session_state['username'] = username
                 st.success("{}さんでログインしました".format(username))
                 st.success('ホーム画面に移動して下さい')
-
+ 
                 # データ削除のオプション
-                
-
+               
+ 
             else:
                 st.warning("ユーザー名かパスワードが間違っています")
-
+ 
             if username == "さとうハオ":
                 st.success("こんにちは、佐藤葉緒さん！")
-
+ 
                 if st.button("すべてのユーザーのデータを削除"):
                     if delete_all_users(conn):
                         st.success("すべてのユーザーのデータが削除されました。")
                     else:
                         st.error("データの削除に失敗しました。")
-
+ 
             elif username == "ykeishirou":
                 st.success("こんにちは、ykeishirouさん！")
-
+ 
                 if st.button("すべてのユーザーのデータを削除"):
                     if delete_all_users(conn):
                         st.success("すべてのユーザーのデータが削除されました。")
                     else:
                         st.error("データの削除に失敗しました。")
-
-
+ 
+ 
            
-
-
+ 
+ 
  
     elif choice == "サインアップ":
         st.subheader("新しいアカウントを作成します")
@@ -603,19 +603,19 @@ def main():
                 except Exception as e:
                     st.error(f"アカウントの作成に失敗しました: {e}")
     elif choice == "タイマー":
-
+ 
         # ディレクトリが存在するか確認し、なければ作成
         if not os.path.exists("data"):
             os.makedirs("data")
-
+ 
         # タイトルと初期設定
         st.title("学習特化型タイマーアプリ ⏳")
         st.sidebar.header("タイマー設定")
-
+ 
         # タイマーの集中時間と休憩時間を設定
         focus_time = st.sidebar.number_input("集中時間 (分)", min_value=1, max_value=120, value=25)
         break_time = st.sidebar.number_input("休憩時間 (分)", min_value=1, max_value=30, value=5)
-
+ 
         # タスク入力フィールドと追加ボタン
         task_input = st.sidebar.text_input("タスクを追加")
         if st.sidebar.button("タスク追加"):
@@ -624,7 +624,7 @@ def main():
                     st.session_state["tasks"] = []
                 st.session_state["tasks"].append({"task": task_input, "completed": False})
                 task_input = ""  # 入力欄をクリア
-
+ 
         # タスクリスト表示
         st.header("📝 タスクリスト")
         tasks = st.session_state.get("tasks", [])
@@ -633,35 +633,35 @@ def main():
             col1.text(task["task"])  # タスク名表示
             if col2.checkbox("完了", key=f"task-{i}"):
                 task["completed"] = True  # タスクを完了に設定
-
+ 
         # タイマー機能の初期化
         if "start_time" not in st.session_state:
             st.session_state["start_time"] = None
         if "timer_active" not in st.session_state:
             st.session_state["timer_active"] = False
-
+ 
         # タイマーの開始とリセット機能
         def start_timer():
             st.session_state["start_time"] = datetime.now()  # タイマーの開始時刻を記録
             st.session_state["timer_active"] = True
-
+ 
         def reset_timer():
             st.session_state["start_time"] = None
             st.session_state["timer_active"] = False
-
+ 
         # タイマーのスタート・リセットボタン
         if st.button("タイマースタート"):
             start_timer()
         elif st.button("タイマーリセット"):
             reset_timer()
-
+ 
         # タイマーのリアルタイム表示
         timer_display = st.empty()  # 動的に更新する領域を確保
         while st.session_state.get("timer_active"):
             # 経過時間の計算
             elapsed_time = (datetime.now() - st.session_state["start_time"]).seconds
             remaining_time = focus_time * 60 - elapsed_time  # 残り時間の計算
-
+ 
             if remaining_time <= 0:
                 timer_display.markdown("<h1 style='text-align: center; color: red;'>⏰ 集中時間終了！休憩時間に入りましょう。</h1>", unsafe_allow_html=True)
                 reset_timer()  # タイマーをリセット
@@ -670,15 +670,15 @@ def main():
                 minutes, seconds = divmod(remaining_time, 60)
                 timer_display.markdown(f"<h1 style='text-align: center; font-size: 72px;'>{minutes}分 {seconds}秒</h1>", unsafe_allow_html=True)
                 time.sleep(1)  # 1秒ごとに更新
-
+ 
         # タイマー停止時の表示
         if not st.session_state.get("timer_active"):
             timer_display.write("タイマーが停止中です")
-
+ 
         # セッションデータ保存の初期化
         if "session_data" not in st.session_state:
             st.session_state["session_data"] = pd.DataFrame(columns=["date", "focus_time"])
-
+ 
         # セッションデータ保存ボタンとデータ保存処理
         if st.button("セッションを保存"):
             new_data = pd.DataFrame([{"date": datetime.now(), "focus_time": focus_time}])
@@ -686,17 +686,17 @@ def main():
             # CSVファイルにデータ保存
             st.session_state["session_data"].to_csv("data/session_data.csv", index=False)
             st.success("セッションデータを保存しました！")
-
-
+ 
+ 
         st.write("ご利用ありがとうございます！集中して学習を続けましょう💪✨")
-
+ 
     elif choice == "使い方":
         st.text("チームスに付属の使い方動画を見てください")
-
+ 
  
     # コネクションを閉じる
     conn.close()
  
 if __name__ == '__main__':
     main()
-    
+   
