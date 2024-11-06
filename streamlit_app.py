@@ -8,8 +8,8 @@ from datetime import datetime
 import streamlit.components.v1 as components
 import os
 import time
- 
-import streamlit as st
+import plotly.express as px
+
  
 # ページ設定
 st.set_page_config(
@@ -101,7 +101,44 @@ def add_user(conn, username, password):
     c = conn.cursor()
     c.execute('INSERT INTO userstable(username, password) VALUES (?, ?)', (username, hashed_password))
     conn.commit()
- 
+def get_top_10_study_data(conn, date):
+    # 特定の日の学習時間をユーザーごとに集計
+    query = '''
+    SELECT username, SUM(study_hours) AS total_study_hours
+    FROM study_data
+    WHERE date = ?
+    GROUP BY username
+    ORDER BY total_study_hours DESC
+    LIMIT 10
+    '''
+    c = conn.cursor()
+    c.execute(query, (date,))
+    result = c.fetchall()
+    return result
+
+def display_top_10_study_time():
+    st.title("日別学習時間トップ10")
+
+    # 日付の入力を受け付ける
+    date = st.date_input("日付を選択してください", datetime.today())
+
+    # データベース接続
+    conn = sqlite3.connect('database.db')
+
+    # トップ10の学習時間データを取得
+    top_10_data = get_top_10_study_data(conn, date.strftime('%Y-%m-%d'))
+
+    # データをDataFrameに変換
+    df = pd.DataFrame(top_10_data, columns=["Username", "Total Study Hours"])
+
+    if len(df) > 0:
+        # Plotlyで棒グラフを描画
+        fig = px.bar(df, x="Username", y="Total Study Hours", 
+                     title=f"{date.strftime('%Y-%m-%d')} の学習時間トップ10", 
+                     labels={"Username": "ユーザー名", "Total Study Hours": "合計学習時間 (時間)"})
+        st.plotly_chart(fig)
+    else:
+        st.write("データがありません。指定した日に学習データがありません。") 
  
 # クラスデータを追加または更新する関数
 def update_class_data(conn, username, class_grade):
@@ -241,7 +278,7 @@ def main():
                     st.sidebar.warning('クラス/学年を入力してください。')
  
             # タブによる学習データ、日課表、学習ゲーム、AIの表示
-            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7,tab8= st.tabs(["学習データ","スコアデータ", "AI","オープンチャット" ,"学習ゲーム", "日課表", "to do リスト", "カレンダー"])
+            tab1, tab2, tab3, tab4, tab5, tab6 ,tab7,tab8,tab9= st.tabs(["学習データ","スコアデータ","ランキング", "AI","オープンチャット" ,"学習ゲーム", "日課表", "to do リスト", "カレンダー"])
  
             with tab1:
                     st.subheader("学習データの入力")
@@ -365,9 +402,10 @@ def main():
                         if st.button("スコアデータを削除"):
                             delete_study_data(conn, username, delete_date.strftime('%Y-%m-%d'))
                             st.success(f"{delete_date.strftime('%Y-%m-%d')} のスコアデータが削除されました！")
- 
-           
-            with tab6:
+            with tab3:
+                display_top_10_study_time()
+                
+            with tab7:
                 st.subheader("日課表")
  
                 # クラスをもとに日課表を取得
@@ -377,7 +415,7 @@ def main():
                     st.dataframe(timetable)
                 else:
                     st.warning("無効なクラス/学年が入力されました")
-            with tab5:
+            with tab6:
                 st.subheader("学習ゲーム")
  
                 # 列を作成
@@ -403,7 +441,7 @@ def main():
                     st.text('生物')
                     st.link_button("生物", "https://fobegkereok6v9z6ra2bpb.streamlit.app/")
  
-            with tab3:
+            with tab4:
                 if st.button("使い方"):
                     st.text("説明")
                     st.text("現在は使えませんが、左下のチャットマークを押すとAIと学習についてはなすことができます")
@@ -427,7 +465,7 @@ def main():
                 )
  
                
-            with tab7:
+            with tab8:
                 st.subheader("to do リスト")
  
                 project_name = st.text_input("予定を入力してください")
@@ -486,7 +524,7 @@ def main():
                         st.success(f"予定 '{project_to_delete}' が削除されました！")
                 else:
                     st.write("現在、予定はありません。予定があれば追加してください。")
-            with tab4:  # Chat Tab
+            with tab5:  # Chat Tab
                 # データベースに接続
                 con = sqlite3.connect('chat.db')
                 cc = con.cursor()
@@ -527,7 +565,7 @@ def main():
                         con.commit()
                         st.success("すべてのチャット履歴が削除されました！")
  
-            with tab8:
+            with tab9:
                 st.subheader("カレンダー")
                 selected_date = st.date_input("イベントの日付を選択してください", datetime.now())
                 event_description = st.text_input("イベントの説明を入力してください")
