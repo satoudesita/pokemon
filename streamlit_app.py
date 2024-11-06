@@ -236,7 +236,7 @@ def main():
             if st.sidebar.button("クラス/学年を変更"):
                 if class_grade_input:
                     update_class_data(conn, username, class_grade_input)
-                    st.sidebar.success('クラス/学年が変更されました！')
+                    st.sidebar.success('クラス/学年が変更されました')
                 else:
                     st.sidebar.warning('クラス/学年を入力してください。')
  
