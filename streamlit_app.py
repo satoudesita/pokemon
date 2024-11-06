@@ -138,7 +138,7 @@ def display_top_10_study_time():
                      labels={"Username": "ユーザー名", "Total Study Hours": "合計学習時間 (時間)"})
         st.plotly_chart(fig)
     else:
-        st.write("データがありません。指定した日に学習データがありません。") 
+        st.write("データがありません。指定した日に学習データがありません。。。。。。") 
  
 # クラスデータを追加または更新する関数
 def update_class_data(conn, username, class_grade):
